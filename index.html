@@ -137,6 +137,26 @@ body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 "Se
 .tabela-grafico th, .tabela-grafico td { padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--line); }
 .tabela-grafico th:first-child, .tabela-grafico td:first-child { text-align: left; }
 
+/* notícias dos candidatos */
+.noticias { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+.noticias h3 { margin: 0 0 12px; font-size: 13px; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: .05em; }
+.noticias-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.noticias-col h4 { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
+.noticias-col h4 i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
+.noticias-col h4 i.c1 { background: var(--c1); }
+.noticias-col h4 i.c2 { background: var(--c2); }
+.noticias-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.noticias-lista li { padding-bottom: 10px; border-top: 1px solid var(--line); padding-top: 10px; }
+.noticias-lista li:first-child { border-top: 0; padding-top: 0; }
+.noticias-lista a { color: var(--text); font-weight: 600; font-size: 13.5px; line-height: 1.35; text-decoration: none; }
+.noticias-lista a:hover { text-decoration: underline; }
+.noticias-fonte { display: block; margin-top: 3px; font-size: 12px; color: var(--muted); }
+.noticias-mais { display: inline-block; margin-top: 12px; font-size: 12.5px; font-weight: 700; color: var(--verde); text-decoration: none; }
+.noticias-mais:hover { text-decoration: underline; }
+.noticias-estado { font-size: 13px; color: var(--muted); }
+.noticias-estado a { color: var(--verde); font-weight: 700; }
+.noticias-rodape { margin: 14px 0 0; font-size: 11.5px; color: var(--muted); text-align: right; }
+
 .flash { animation: flash 1.6s; }
 @keyframes flash { 0% { background: rgba(255, 223, 0, .45); } 100% { background: transparent; } }
 
@@ -151,6 +171,7 @@ footer a { color: var(--verde); font-weight: 700; }
   .linha { grid-template-columns: 34px 1fr 84px 64px; }
   .linha .bar { display: none; }
   .linha .v { font-size: 12px; }
+  .noticias-grid { grid-template-columns: 1fr; gap: 22px; }
 }
 </style>
 </head>
@@ -195,6 +216,15 @@ footer a { color: var(--verde); font-weight: 700; }
   </section>
 
   <section class="outros" id="outros" hidden></section>
+
+  <section class="noticias" id="noticiasCard" hidden>
+    <h3>Notícias dos candidatos</h3>
+    <div class="noticias-grid">
+      <div class="noticias-col" id="noticiasColA"></div>
+      <div class="noticias-col" id="noticiasColB"></div>
+    </div>
+    <p class="noticias-rodape">Manchetes via Google Notícias.</p>
+  </section>
 
   <footer>
     Fonte: TSE (resultados.tse.jus.br). Atualiza a cada 30 s; o TSE renova os arquivos a cada ~1 min, então o painel pode ficar um pouco atrás da apuração.
@@ -311,6 +341,7 @@ function desenhar(r) {
 
   registrarHistorico(a, b);
   desenharGrafico();
+  desenharNoticias(a, b);
 }
 
 // ===== gráfico de evolução da apuração =====
@@ -471,6 +502,74 @@ function desenharTabelaGrafico() {
     `<table><thead><tr><th>Hora</th><th>${esc(nomeLula)}</th><th>${esc(nomeAdv)}</th></tr></thead><tbody>${linhas}</tbody></table>`;
 }
 
+// ===== notícias dos candidatos (Google Notícias via rss2json) =====
+const NOTICIAS_TTL = 10 * 60 * 1000; // não busca de novo pro mesmo candidato antes de 10 min
+const noticiasCache = {};            // número do candidato -> { items, erro, quando }
+let noticiasToken = 0;
+
+const urlGoogleNews = nome => `https://news.google.com/rss/search?q=${encodeURIComponent(nome)}&hl=pt-BR&gl=BR&ceid=BR:pt-BR`;
+const urlBuscaGoogleNews = nome => `https://news.google.com/search?q=${encodeURIComponent(nome)}&hl=pt-BR&gl=BR&ceid=BR:pt-BR`;
+
+function formatarDataNoticia(s) {
+  const d = new Date(String(s).replace(" ", "T") + "Z");
+  if (isNaN(d)) return "";
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) + " " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+}
+
+async function buscarNoticias(n, nome) {
+  const atual = noticiasCache[n];
+  if (atual && Date.now() - atual.quando < NOTICIAS_TTL) return atual;
+  const estado = { items: null, erro: false, quando: Date.now() };
+  noticiasCache[n] = estado;
+  try {
+    const url = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(urlGoogleNews(nome))}`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const d = await r.json();
+    if (d.status !== "ok") throw new Error("rss2json: " + d.status);
+    estado.items = (d.items || []).slice(0, 4).map(it => {
+      const partes = String(it.title || "").split(" - ");
+      const fonte = partes.length > 1 ? partes.pop() : "";
+      return { titulo: partes.join(" - "), fonte, link: it.link, quando: it.pubDate };
+    });
+  } catch (e) {
+    estado.erro = true;
+  }
+  return estado;
+}
+
+function colunaCarregando(nome, classe) {
+  return `<h4><i class="${classe}"></i>${esc(nome)}</h4><p class="noticias-estado">Carregando notícias…</p>`;
+}
+
+function colunaNoticiasHtml(nome, estado, classe) {
+  const cab = `<h4><i class="${classe}"></i>${esc(nome)}</h4>`;
+  if (estado.erro || !estado.items || !estado.items.length) {
+    return cab + `<p class="noticias-estado">Não consegui carregar as notícias agora.
+      <a href="${esc(urlBuscaGoogleNews(nome))}" target="_blank" rel="noopener">Ver no Google Notícias</a></p>`;
+  }
+  const itens = estado.items.map(it => `
+    <li><a href="${esc(it.link)}" target="_blank" rel="noopener">${esc(it.titulo)}</a>
+      <span class="noticias-fonte">${esc(it.fonte)}${it.quando ? " · " + formatarDataNoticia(it.quando) : ""}</span></li>`).join("");
+  return cab + `<ul class="noticias-lista">${itens}</ul>
+    <a class="noticias-mais" href="${esc(urlBuscaGoogleNews(nome))}" target="_blank" rel="noopener">ver mais notícias →</a>`;
+}
+
+async function desenharNoticias(a, b) {
+  const box = $("noticiasCard");
+  if (!a || !b) { box.hidden = true; return; }
+  box.hidden = false;
+  // cor segue a identidade do candidato (mesma regra do duelo e do gráfico), não a posição a/b
+  const classeA = cor(a), classeB = cor(b);
+  const meuToken = ++noticiasToken;
+  if (!noticiasCache[a.n]) $("noticiasColA").innerHTML = colunaCarregando(a.nm, classeA);
+  if (!noticiasCache[b.n]) $("noticiasColB").innerHTML = colunaCarregando(b.nm, classeB);
+  const [ea, eb] = await Promise.all([buscarNoticias(a.n, a.nm), buscarNoticias(b.n, b.nm)]);
+  if (meuToken !== noticiasToken) return;   // usuário já trocou de aba/candidatos nesse meio tempo
+  $("noticiasColA").innerHTML = colunaNoticiasHtml(a.nm, ea, classeA);
+  $("noticiasColB").innerHTML = colunaNoticiasHtml(b.nm, eb, classeB);
+}
+
 function estadoDaTela(r) {
   if (!r) return ["aguardando", "espera"];
   if (r.totalizado) return ["apuração encerrada", "fim"];
@@ -492,6 +591,7 @@ async function atualizar() {
         "O TSE ainda não publicou os dados do 1º turno.";
       $("duelo").innerHTML = `<div class="votos" style="grid-column:1/-1;text-align:center;padding:30px 0">Aguardando a primeira apuração…</div>`;
       $("barra").innerHTML = ""; $("lider").innerHTML = ""; $("stats").innerHTML = ""; $("outros").hidden = true;
+      $("noticiasCard").hidden = true;
       desenharGrafico();
       $("estado").textContent = `aguardando · verificado às ${new Date().toLocaleTimeString("pt-BR")}`;
       $("dot").className = "dot espera";
