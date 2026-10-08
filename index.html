@@ -43,6 +43,12 @@ body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 "Se
 
 .aviso { padding: 11px 14px; border-radius: 10px; background: var(--amarelo); color: var(--azul); font-weight: 600; font-size: 14px; }
 
+.abas { display: flex; gap: 8px; }
+.aba { padding: 9px 18px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--muted);
+       font-weight: 800; font-size: 13px; cursor: pointer; font-family: inherit; }
+.aba.ativa { background: var(--azul); color: #fff; border-color: var(--azul); }
+.aba:not(.ativa):hover { border-color: var(--azul); color: var(--azul); }
+
 /* disputa principal */
 .disputa { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 22px 22px 20px;
            box-shadow: 0 6px 22px rgba(0,39,118,.08); position: relative; overflow: hidden; }
@@ -116,6 +122,11 @@ footer a { color: var(--verde); font-weight: 700; }
     </div>
   </header>
 
+  <div class="abas" role="tablist">
+    <button type="button" class="aba" id="aba1" role="tab">1º turno</button>
+    <button type="button" class="aba" id="aba2" role="tab">2º turno</button>
+  </div>
+
   <div class="aviso" id="aviso" hidden></div>
 
   <section class="disputa" id="disputa">
@@ -137,9 +148,11 @@ footer a { color: var(--verde); font-weight: 700; }
 <script>
 // ===== configuração =====
 const BASE = "https://resultados.tse.jus.br/oficial/ele2026";
-const SEGUNDO_TURNO = new URLSearchParams(location.search).has("2turno");   // ?2turno=1 mostra o 2º turno (a partir de 25/10)
-const ELEICAO = SEGUNDO_TURNO ? "6258" : "6257";                             // 6257 = 1º turno · 6258 = 2º turno presidente
+const ELEICAO = { 1: "6257", 2: "6258" };                             // 6257 = 1º turno · 6258 = 2º turno presidente
+const DATA = { 1: "04/10/2026", 2: "25/10/2026" };
 const INTERVALO = 30;                                                 // segundos
+
+let turno = new URLSearchParams(location.search).has("2turno") ? 2 : 1;
 
 // ===== utilitários =====
 const $ = id => document.getElementById(id);
@@ -150,7 +163,8 @@ const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "
 
 // ===== dados =====
 async function buscar() {
-  const r = await fetch(`${BASE}/${ELEICAO}/dados/br/br-c0001-e00${ELEICAO}-u.json`, { cache: "no-store" });
+  const ele = ELEICAO[turno];
+  const r = await fetch(`${BASE}/${ele}/dados/br/br-c0001-e00${ele}-u.json`, { cache: "no-store" });
   if (r.status === 404 || r.status === 403) return null;     // ainda não publicado
   if (!r.ok) throw new Error("HTTP " + r.status);
   return r.json();
@@ -177,17 +191,18 @@ function interpretar(d) {
 }
 
 // ===== desenho =====
-const anterior = {};          // votos da atualização anterior, para mostrar o "+N"
+const anterior = { 1: {}, 2: {} };          // votos da atualização anterior por turno, para mostrar o "+N"
 // cor fixa por candidato (Lula = 13 verde, o outro = azul), para não trocar quando alguém vira líder
 const cor = c => (c.n === "13" ? "c1" : "c2");
 
 function desenhar(r) {
   const [a, b] = r.cands;
   const restantes = r.cands.slice(2);
+  const ant = anterior[turno];
 
   // duelo: os dois primeiros colocados
   const linha = (c, lado) => {
-    const d = anterior[c.n] !== undefined ? c.votos - anterior[c.n] : 0;
+    const d = ant[c.n] !== undefined ? c.votos - ant[c.n] : 0;
     return `<div class="cand ${lado === "dir" ? "dir" : ""}${d > 0 ? " flash" : ""}">
       <div class="num">${esc(c.n)}</div>
       <div class="nome ${cor(c)}">${esc(c.nm)}${c.eleito ? '<span class="badge">ELEITO</span>' : ""}</div>
@@ -234,7 +249,7 @@ function desenhar(r) {
         <span class="p">${pct(c.pct)}</span></div>`).join("");
   } else box.hidden = true;
 
-  r.cands.forEach(c => anterior[c.n] = c.votos);
+  r.cands.forEach(c => ant[c.n] = c.votos);
 }
 
 function estadoDaTela(r) {
@@ -253,7 +268,7 @@ async function atualizar() {
     const d = await buscar();
     if (!d) {
       $("aviso").hidden = false;
-      $("aviso").textContent = SEGUNDO_TURNO ?
+      $("aviso").textContent = turno === 2 ?
         "O TSE ainda não publicou os dados do 2º turno. Esta tela consulta sozinha a cada 30 s e começa a mostrar a apuração assim que os dados saírem (a votação começa às 8h do dia 25/10)." :
         "O TSE ainda não publicou os dados do 1º turno.";
       $("duelo").innerHTML = `<div class="votos" style="grid-column:1/-1;text-align:center;padding:30px 0">Aguardando a primeira apuração…</div>`;
@@ -296,9 +311,20 @@ $("tema").onclick = e => {
   t.dataset.theme = escuro ? "light" : "dark";
 };
 
-$("subt").textContent = SEGUNDO_TURNO ? "2º turno · 25/10/2026" : "1º turno · 04/10/2026";
-document.title = SEGUNDO_TURNO ? "Presidente — 2º turno" : "Presidente — 1º turno";
-atualizar();
+// ===== abas (1º / 2º turno) =====
+function mostrarAba(novoTurno) {
+  turno = novoTurno;
+  $("aba1").classList.toggle("ativa", turno === 1);
+  $("aba2").classList.toggle("ativa", turno === 2);
+  $("subt").textContent = `${turno}º turno · ${DATA[turno]}`;
+  document.title = `Presidente — ${turno}º turno`;
+  proximo = 0;               // força nova busca já
+  atualizar();
+}
+$("aba1").onclick = () => mostrarAba(1);
+$("aba2").onclick = () => mostrarAba(2);
+
+mostrarAba(turno);
 setInterval(relogio, 1000);
 </script>
 </body>
