@@ -345,11 +345,45 @@ function desenhar(r) {
 }
 
 // ===== gráfico de evolução da apuração =====
-const historico = { 1: [], 2: [] };     // pontos ao longo do tempo, por turno
 const MAX_PONTOS = 2000;
 const SVG_W = 640, SVG_H = 220, PAD_L = 36, PAD_R = 54, PAD_T = 14, PAD_B = 24;
 let layoutGrafico = null;               // coordenadas do último desenho, usado pelo hover/teclado
 let indiceAtivo = -1;
+
+// persiste o histórico no localStorage pra sobreviver a um F5 durante a apuração
+const HISTORICO_CHAVE = "painel-presidente-historico";
+
+function dataDoTurno(turno) {
+  const [d, m, y] = DATA[turno].split("/").map(Number);
+  return { d, m, y };
+}
+function pontoEhDoDia(ponto, turno) {
+  const { d, m, y } = dataDoTurno(turno);
+  const dt = new Date(ponto.t);
+  return dt.getDate() === d && dt.getMonth() + 1 === m && dt.getFullYear() === y;
+}
+
+function carregarHistorico() {
+  const vazio = { 1: [], 2: [] };
+  try {
+    const bruto = localStorage.getItem(HISTORICO_CHAVE);
+    if (!bruto) return vazio;
+    const salvo = JSON.parse(bruto);
+    for (const t of [1, 2]) {
+      const pontos = Array.isArray(salvo[t]) ? salvo[t] : [];
+      // descarta pontos que não são do dia oficial daquele turno (ex.: resquício de um teste ou de outra eleição)
+      vazio[t] = pontos.filter(p => p && typeof p.t === "number" && pontoEhDoDia(p, t));
+    }
+  } catch (e) { /* localStorage indisponível ou corrompido: segue só em memória */ }
+  return vazio;
+}
+
+function salvarHistorico() {
+  try { localStorage.setItem(HISTORICO_CHAVE, JSON.stringify(historico)); }
+  catch (e) { /* modo privado, cota cheia etc. — não é crítico, só perde a persistência */ }
+}
+
+const historico = carregarHistorico();   // pontos ao longo do tempo, por turno
 
 // guarda um ponto só quando algo muda (evita empilhar pontos repetidos quando a apuração já encerrou)
 function registrarHistorico(a, b) {
@@ -360,6 +394,7 @@ function registrarHistorico(a, b) {
   if (mudou) {
     h.push({ t: Date.now(), aN: a.n, aNm: a.nm, aPct: a.pct, bN: b.n, bNm: b.nm, bPct: b.pct });
     if (h.length > MAX_PONTOS) h.shift();
+    salvarHistorico();
   }
 }
 
