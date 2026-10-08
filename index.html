@@ -87,12 +87,13 @@ body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 "Se
 /* demais candidatos */
 .outros { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; }
 .outros h3 { margin: 0 0 6px; font-size: 13px; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: .05em; }
-.linha { display: grid; grid-template-columns: 42px 1fr 110px 74px; gap: 10px; align-items: center; padding: 7px 0;
+.linha { display: grid; grid-template-columns: 42px 1fr 110px 110px 74px; gap: 10px; align-items: center; padding: 7px 0;
          border-top: 1px solid var(--line); font-size: 14px; font-variant-numeric: tabular-nums; }
 .linha:first-of-type { border-top: 0; }
 .linha .n { font-weight: 800; color: var(--verde); }
 .linha .bar { height: 7px; background: var(--line); border-radius: 4px; overflow: hidden; }
 .linha .bar i { display: block; height: 100%; background: var(--other); }
+.linha .v { text-align: right; color: var(--muted); font-size: 13px; }
 .linha .p { text-align: right; font-weight: 700; }
 
 /* gráfico de evolução da apuração */
@@ -147,8 +148,9 @@ footer a { color: var(--verde); font-weight: 700; }
   .cand.dir { text-align: left; }
   .vs { justify-self: center; }
   .pct { font-size: 48px; }
-  .linha { grid-template-columns: 34px 1fr 64px; }
+  .linha { grid-template-columns: 34px 1fr 84px 64px; }
   .linha .bar { display: none; }
+  .linha .v { font-size: 12px; }
 }
 </style>
 </head>
@@ -301,6 +303,7 @@ function desenhar(r) {
       <div class="linha"><span class="n">${esc(c.n)}</span>
         <span>${esc(c.nm)} <span style="color:var(--muted)">${esc(c.par)}</span></span>
         <div class="bar"><i style="width:${Math.min(100, c.pct)}%"></i></div>
+        <span class="v">${fmt(c.votos)}</span>
         <span class="p">${pct(c.pct)}</span></div>`).join("");
   } else box.hidden = true;
 
