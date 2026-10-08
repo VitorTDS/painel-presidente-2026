@@ -475,7 +475,7 @@ function estadoDaTela(r) {
 }
 
 // ===== ciclo =====
-let proximo = 0, buscando = false;
+let proximo = 0, buscando = false, totalizadoAtual = false;
 
 async function atualizar() {
   if (buscando) return;
@@ -497,7 +497,8 @@ async function atualizar() {
       $("aviso").hidden = true;
       desenhar(r);
       const [txt, cls] = estadoDaTela(r);
-      $("estado").textContent = `${txt} · atualizado ${new Date().toLocaleTimeString("pt-BR")}`;
+      totalizadoAtual = r.totalizado;
+      $("estado").textContent = r.totalizado ? "apuração encerrada" : `${txt} · atualizado ${new Date().toLocaleTimeString("pt-BR")}`;
       $("dot").className = "dot " + cls;
     }
     proximo = Date.now() + INTERVALO * 1000;
@@ -513,7 +514,7 @@ async function atualizar() {
 function relogio() {
   if (buscando) return;
   if (Date.now() >= proximo) atualizar();
-  else {
+  else if (!totalizadoAtual) {
     const s = Math.ceil((proximo - Date.now()) / 1000);
     const base = $("estado").textContent.replace(/ · próxima em \d+s$/, "");
     $("estado").textContent = base + ` · próxima em ${s}s`;
@@ -567,6 +568,7 @@ function mostrarAba(novoTurno) {
   $("subt").textContent = `${turno}º turno · ${DATA[turno]}`;
   document.title = `Presidente — ${turno}º turno`;
   proximo = 0;               // força nova busca já
+  totalizadoAtual = false;
   atualizar();
 }
 $("aba1").onclick = () => mostrarAba(1);
