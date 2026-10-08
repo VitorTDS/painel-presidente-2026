@@ -154,6 +154,23 @@ body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 "Se
 .tabela-grafico th:first-child, .tabela-grafico td:first-child { text-align: left; }
 
 /* notícias dos candidatos */
+.pesquisas { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+.pesquisas h3 { margin: 0 0 4px; font-size: 13px; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: .05em; }
+.pesq-resumo { margin: 8px 0 14px; font-size: 15px; line-height: 1.4; }
+.pesq-resumo b { font-weight: 800; }
+.pesq-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.pesq-topo { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 13px; }
+.pesq-topo b { font-weight: 800; }
+.pesq-topo span { color: var(--muted); font-size: 12px; }
+.pesq-barra { display: flex; height: 12px; border-radius: 6px; overflow: hidden; margin: 6px 0 4px; background: var(--line); }
+.pesq-barra i { display: block; height: 100%; }
+.pesq-barra i.c1 { background: var(--c1); }
+.pesq-barra i.c2 { background: var(--c2); }
+.pesq-nums { display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 700; }
+.pesq-nums .c1 { color: var(--c1); }
+.pesq-nums .c2 { color: var(--c2); }
+.pesq-nota { margin: 14px 0 0; font-size: 11.5px; color: var(--muted); line-height: 1.45; }
+.pesq-nota a { color: var(--verde); font-weight: 700; }
 .noticias { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
 .noticias h3 { margin: 0 0 12px; font-size: 13px; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: .05em; }
 .noticias-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
@@ -212,6 +229,8 @@ footer a { color: var(--verde); font-weight: 700; }
   </div>
 
   <div class="aviso" id="aviso" hidden></div>
+
+  <section class="pesquisas" id="pesquisasCard" hidden></section>
 
   <section class="disputa" id="disputa">
     <div class="duelo" id="duelo"></div>
@@ -644,6 +663,47 @@ function estadoDaTela(r) {
   return ["ao vivo", ""];
 }
 
+// ===== pesquisas do 2º turno (mostradas enquanto o TSE não publica a apuração) =====
+// Atualizar à mão quando sair pesquisa nova. Percentuais como divulgados; "base" diz se são votos totais
+// (com brancos/nulos/indecisos) ou válidos. Para totais, os válidos são calculados aqui: Lula ÷ (Lula + Flávio).
+const PESQUISAS_ATUALIZADO = "08/10/2026";
+const PESQUISAS = [
+  { inst: "PoderData/Aya", data: "08/10", lula: 47,   flavio: 53,   base: "validos", margem: 1.8, reg: "BR-08134/2026" },
+  { inst: "Datafolha",     data: "03/10", lula: 47,   flavio: 46,   base: "totais",  margem: 2,   reg: "BR-01708/2026" },
+  { inst: "Quaest",        data: "03/10", lula: 42,   flavio: 44,   base: "totais",  margem: 2,   reg: "BR-02197/2026" },
+  { inst: "CNT/MDA",       data: "03/10", lula: 47.3, flavio: 43.1, base: "totais",  margem: 2.2, reg: "BR-04756/2026" },
+  { inst: "AtlasIntel",    data: "03/10", lula: 50.1, flavio: 49.9, base: "validos", margem: 1,   reg: "BR-00999/2026" },
+];
+
+function validos(p) {
+  const t = p.lula + p.flavio;
+  return { lula: p.base === "validos" ? p.lula : p.lula / t * 100, flavio: p.base === "validos" ? p.flavio : p.flavio / t * 100 };
+}
+
+function desenharPesquisas() {
+  const box = $("pesquisasCard");
+  const v = PESQUISAS.map(validos);
+  const n = v.length;
+  const mLula = v.reduce((a, x) => a + x.lula, 0) / n;
+  const mFlavio = v.reduce((a, x) => a + x.flavio, 0) / n;
+  const margemMedia = PESQUISAS.reduce((a, p) => a + p.margem, 0) / n;
+  const dif = Math.abs(mLula - mFlavio);
+  const lider = mLula > mFlavio ? "Lula" : "Flávio Bolsonaro";
+  const resumo = dif <= margemMedia
+    ? `<b>Empate técnico.</b> Na média das ${n} pesquisas, ${lider} tem <b>${pct(Math.max(mLula, mFlavio), 1)}</b> dos votos válidos e fica à frente por apenas ${dif.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} ponto${dif >= 1.05 ? "s" : ""} (margem de erro média de ${margemMedia.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} p.p.).`
+    : `<b>${lider} na frente.</b> Na média das ${n} pesquisas, tem <b>${pct(Math.max(mLula, mFlavio), 1)}</b> dos votos válidos, ${dif.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} pontos à frente.`;
+  const linhas = PESQUISAS.map((p, i) => `
+    <li><div class="pesq-topo"><b>${esc(p.inst)}</b><span>divulgada em ${esc(p.data)} · margem ±${p.margem.toLocaleString("pt-BR")} p.p.</span></div>
+      <div class="pesq-barra" role="img" aria-label="${esc(p.inst)}: Lula ${pct(v[i].lula, 1)}, Flávio Bolsonaro ${pct(v[i].flavio, 1)} dos votos válidos">
+        <i class="c1" style="width:${v[i].lula}%"></i><i class="c2" style="width:${v[i].flavio}%"></i></div>
+      <div class="pesq-nums"><span class="c1">Lula ${pct(v[i].lula, 1)}</span><span class="c2">Flávio ${pct(v[i].flavio, 1)}</span></div></li>`).join("");
+  box.innerHTML = `<h3>Pesquisas do 2º turno · Lula x Flávio</h3>
+    <p class="pesq-resumo">${resumo}</p>
+    <ul class="pesq-lista">${linhas}</ul>
+    <p class="pesq-nota">Todos os números em votos válidos (excluindo brancos, nulos e indecisos). Datafolha, Quaest e CNT/MDA divulgam votos totais, e a conversão para válidos é cálculo deste painel. A média é simples, sem ponderar amostra nem data. Pesquisa não é previsão: só o voto de 25/10 decide. Atualizado em ${PESQUISAS_ATUALIZADO}. Registros no TSE: ${PESQUISAS.map(p => esc(p.reg)).join(", ")}.</p>`;
+  box.hidden = false;
+}
+
 // ===== ciclo =====
 let proximo = 0, buscando = false, totalizadoAtual = false;
 
@@ -660,12 +720,14 @@ async function atualizar() {
       $("duelo").innerHTML = `<div class="votos" style="grid-column:1/-1;text-align:center;padding:30px 0">Aguardando a primeira apuração…</div>`;
       $("barra").innerHTML = ""; $("lider").innerHTML = ""; $("stats").innerHTML = ""; $("outros").hidden = true;
       $("noticiasCard").hidden = true;
+      if (turno === 2) desenharPesquisas(); else $("pesquisasCard").hidden = true;
       desenharGrafico();
       $("estado").textContent = `aguardando · verificado às ${new Date().toLocaleTimeString("pt-BR")}`;
       $("dot").className = "dot espera";
     } else {
       const r = interpretar(d);
       $("aviso").hidden = true;
+      $("pesquisasCard").hidden = true;
       desenhar(r);
       const [txt, cls] = estadoDaTela(r);
       totalizadoAtual = r.totalizado;
