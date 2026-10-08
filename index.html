@@ -95,6 +95,47 @@ body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 "Se
 .linha .bar i { display: block; height: 100%; background: var(--other); }
 .linha .p { text-align: right; font-weight: 700; }
 
+/* gráfico de evolução da apuração */
+.grafico { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px 14px; }
+.grafico-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.grafico-head h3 { margin: 0; font-size: 13px; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: .05em; }
+.legenda { display: flex; gap: 16px; font-size: 12.5px; font-weight: 700; color: var(--muted); }
+.legenda span { display: inline-flex; align-items: center; gap: 6px; }
+.legenda i { width: 14px; height: 2px; border-radius: 2px; display: inline-block; }
+.legenda i.serie-a { background: var(--c1); }
+.legenda i.serie-b { background: var(--c2); }
+.grafico-wrap { position: relative; }
+.grafico-wrap svg { width: 100%; height: 220px; display: block; overflow: visible; }
+.grafico-wrap svg:focus { outline: 2px solid var(--azul); outline-offset: 2px; border-radius: 6px; }
+.eixo-linha { stroke: var(--line); stroke-width: 1; }
+.eixo-texto { fill: var(--muted); font-size: 10px; }
+.serie-a { stroke: var(--c1); fill: var(--c1); }
+.serie-b { stroke: var(--c2); fill: var(--c2); }
+.linha-serie { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.area-serie { opacity: .1; }
+.ponto-final { stroke: var(--card); stroke-width: 2; }
+.rotulo-final { fill: var(--text); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.crosshair { stroke: var(--muted); stroke-width: 1; opacity: 0; }
+.crosshair-ponto { stroke: var(--card); stroke-width: 2; }
+#svgGrafico [hidden] { display: none; }
+.alvo-grafico { cursor: crosshair; }
+.tooltip-grafico { position: absolute; left: 0; top: 0; pointer-events: none; background: var(--card); border: 1px solid var(--line);
+  border-radius: 8px; padding: 8px 10px; font-size: 12.5px; box-shadow: 0 6px 18px rgba(0,0,0,.18); transform: translate(-50%, -108%);
+  white-space: nowrap; z-index: 5; }
+.tooltip-grafico .tt-hora { color: var(--muted); font-weight: 700; margin-bottom: 4px; }
+.tooltip-grafico .tt-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.tooltip-grafico .tt-row + .tt-row { margin-top: 2px; }
+.tooltip-grafico .tt-chave { display: flex; align-items: center; gap: 6px; color: var(--muted); font-weight: 600; }
+.tooltip-grafico .tt-chave i { width: 10px; height: 2px; display: inline-block; border-radius: 2px; }
+.tooltip-grafico .tt-chave i.serie-a { background: var(--c1); }
+.tooltip-grafico .tt-chave i.serie-b { background: var(--c2); }
+.tooltip-grafico b { font-variant-numeric: tabular-nums; }
+.link-tabela { background: none; border: none; color: var(--verde); font-weight: 700; font-size: 12.5px; cursor: pointer; padding: 4px 0; font-family: inherit; }
+.tabela-grafico { max-height: 220px; overflow: auto; margin-top: 8px; border-top: 1px solid var(--line); }
+.tabela-grafico table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.tabela-grafico th, .tabela-grafico td { padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--line); }
+.tabela-grafico th:first-child, .tabela-grafico td:first-child { text-align: left; }
+
 .flash { animation: flash 1.6s; }
 @keyframes flash { 0% { background: rgba(255, 223, 0, .45); } 100% { background: transparent; } }
 
@@ -136,6 +177,20 @@ footer a { color: var(--verde); font-weight: 700; }
   </section>
 
   <section class="stats" id="stats"></section>
+
+  <section class="grafico" id="graficoCard" hidden>
+    <div class="grafico-head">
+      <h3>Evolução da apuração</h3>
+      <div class="legenda" id="legenda"></div>
+    </div>
+    <div class="grafico-wrap">
+      <svg id="svgGrafico" viewBox="0 0 640 220" preserveAspectRatio="none" tabindex="0"
+           aria-label="Gráfico de evolução do percentual de votos dos dois primeiros colocados ao longo da apuração. Use as setas do teclado para navegar pelos pontos."></svg>
+      <div class="tooltip-grafico" id="tooltipGrafico" hidden></div>
+    </div>
+    <button type="button" class="link-tabela" id="toggleTabela">ver como tabela</button>
+    <div class="tabela-grafico" id="tabelaGrafico" hidden></div>
+  </section>
 
   <section class="outros" id="outros" hidden></section>
 
@@ -250,6 +305,167 @@ function desenhar(r) {
   } else box.hidden = true;
 
   r.cands.forEach(c => ant[c.n] = c.votos);
+
+  registrarHistorico(a, b);
+  desenharGrafico();
+}
+
+// ===== gráfico de evolução da apuração =====
+const historico = { 1: [], 2: [] };     // pontos ao longo do tempo, por turno
+const MAX_PONTOS = 2000;
+const SVG_W = 640, SVG_H = 220, PAD_L = 36, PAD_R = 54, PAD_T = 14, PAD_B = 24;
+let layoutGrafico = null;               // coordenadas do último desenho, usado pelo hover/teclado
+let indiceAtivo = -1;
+
+// guarda um ponto só quando algo muda (evita empilhar pontos repetidos quando a apuração já encerrou)
+function registrarHistorico(a, b) {
+  if (!a || !b) return;
+  const h = historico[turno];
+  const ultimo = h[h.length - 1];
+  const mudou = !ultimo || ultimo.aN !== a.n || ultimo.bN !== b.n || ultimo.aPct !== a.pct || ultimo.bPct !== b.pct;
+  if (mudou) {
+    h.push({ t: Date.now(), aN: a.n, aNm: a.nm, aPct: a.pct, bN: b.n, bNm: b.nm, bPct: b.pct });
+    if (h.length > MAX_PONTOS) h.shift();
+  }
+}
+
+function desenharGrafico() {
+  const h = historico[turno];
+  const card = $("graficoCard");
+  if (h.length < 2) { card.hidden = true; layoutGrafico = null; return; }
+  card.hidden = false;
+
+  // a cor segue a identidade do candidato (13 = Lula), não a posição no duelo,
+  // então separamos as duas séries por número do candidato, não por "a"/"b"
+  const serie = n => h.map(p => p.aN === n ? p.aPct : p.bN === n ? p.bPct : null);
+  const nomeDe = n => { for (let i = h.length - 1; i >= 0; i--) { const p = h[i]; if (p.aN === n) return p.aNm; if (p.bN === n) return p.bNm; } return ""; };
+  const ultimo = h[h.length - 1];
+  const nLula = "13";
+  const nAdv = ultimo.aN === nLula ? ultimo.bN : ultimo.aN;
+  const valoresLula = serie(nLula), valoresAdv = serie(nAdv);
+  const nomeLula = nomeDe(nLula), nomeAdv = nomeDe(nAdv);
+
+  const todos = [...valoresLula, ...valoresAdv].filter(v => v !== null);
+  let min = Math.min(...todos), max = Math.max(...todos);
+  if (min === max) { min -= 1; max += 1; }
+  const folga = (max - min) * 0.2 || 2;
+  min = Math.max(0, min - folga); max = Math.min(100, max + folga);
+
+  const px = i => PAD_L + (h.length === 1 ? 0 : (i / (h.length - 1)) * (SVG_W - PAD_L - PAD_R));
+  const py = v => SVG_H - PAD_B - ((v - min) / (max - min)) * (SVG_H - PAD_T - PAD_B);
+
+  const caminho = vals => {
+    let d = "", aberto = false;
+    vals.forEach((v, i) => {
+      if (v === null) { aberto = false; return; }
+      d += (aberto ? "L" : "M") + px(i).toFixed(1) + "," + py(v).toFixed(1) + " ";
+      aberto = true;
+    });
+    return d.trim();
+  };
+  const area = vals => {
+    const base = py(min);
+    let linha = "", aberto = false, inicioX = null, fimX = null;
+    vals.forEach((v, i) => {
+      if (v === null) { aberto = false; return; }
+      if (!aberto) inicioX = px(i);
+      linha += (aberto ? "L" : "M") + px(i).toFixed(1) + "," + py(v).toFixed(1) + " ";
+      fimX = px(i);
+      aberto = true;
+    });
+    return linha ? `${linha} L${fimX.toFixed(1)},${base.toFixed(1)} L${inicioX.toFixed(1)},${base.toFixed(1)} Z` : "";
+  };
+  const ultimoIndiceValido = vals => { for (let i = vals.length - 1; i >= 0; i--) if (vals[i] !== null) return i; return -1; };
+  const idxLula = ultimoIndiceValido(valoresLula), idxAdv = ultimoIndiceValido(valoresAdv);
+
+  const grade = [0, 1, 2, 3].map(k => min + (max - min) * k / 3);
+  const gradeSvg = grade.map(v => `
+    <line class="eixo-linha" x1="${PAD_L}" x2="${SVG_W - PAD_R}" y1="${py(v).toFixed(1)}" y2="${py(v).toFixed(1)}"></line>
+    <text class="eixo-texto" x="${PAD_L - 6}" y="${(py(v) + 3).toFixed(1)}" text-anchor="end">${pct(v, 0)}</text>`).join("");
+
+  const horaIni = new Date(h[0].t).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const horaFim = new Date(ultimo.t).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
+  const rotulo = (idx, vals, classe) => {
+    if (idx < 0) return "";
+    const vx = px(idx), vy = py(vals[idx]);
+    return `<circle class="ponto-final ${classe}" cx="${vx.toFixed(1)}" cy="${vy.toFixed(1)}" r="5"></circle>
+      <text class="rotulo-final" x="${(vx + 8).toFixed(1)}" y="${(vy + 4).toFixed(1)}">${pct(vals[idx])}</text>`;
+  };
+
+  $("svgGrafico").innerHTML = `
+    ${gradeSvg}
+    <text class="eixo-texto" x="${PAD_L}" y="${SVG_H - 6}" text-anchor="start">${horaIni}</text>
+    <text class="eixo-texto" x="${SVG_W - PAD_R}" y="${SVG_H - 6}" text-anchor="end">${horaFim}</text>
+    <path class="area-serie serie-a" d="${area(valoresLula)}"></path>
+    <path class="area-serie serie-b" d="${area(valoresAdv)}"></path>
+    <path class="linha-serie serie-a" d="${caminho(valoresLula)}"></path>
+    <path class="linha-serie serie-b" d="${caminho(valoresAdv)}"></path>
+    ${rotulo(idxLula, valoresLula, "serie-a")}
+    ${rotulo(idxAdv, valoresAdv, "serie-b")}
+    <line class="crosshair" id="crosshair" x1="0" x2="0" y1="${PAD_T}" y2="${SVG_H - PAD_B}"></line>
+    <circle class="crosshair-ponto serie-a" id="cxA" r="5" hidden></circle>
+    <circle class="crosshair-ponto serie-b" id="cxB" r="5" hidden></circle>
+    <rect class="alvo-grafico" x="${PAD_L}" y="${PAD_T}" width="${SVG_W - PAD_L - PAD_R}" height="${SVG_H - PAD_T - PAD_B}" fill="transparent"></rect>
+  `;
+
+  $("legenda").innerHTML =
+    `<span><i class="serie-a"></i>${esc(nomeLula || "Lula")}</span>
+     <span><i class="serie-b"></i>${esc(nomeAdv || "Adversário")}</span>`;
+
+  layoutGrafico = { h, px, py, valoresLula, valoresAdv, nomeLula, nomeAdv };
+  if (!$("tabelaGrafico").hidden) desenharTabelaGrafico();
+}
+
+function indicePeloX(xSvg) {
+  if (!layoutGrafico) return -1;
+  const { h, px } = layoutGrafico;
+  let melhor = 0, menorDist = Infinity;
+  h.forEach((_, i) => { const d = Math.abs(px(i) - xSvg); if (d < menorDist) { menorDist = d; melhor = i; } });
+  return melhor;
+}
+
+function mostrarTooltipGrafico(idx) {
+  if (!layoutGrafico || idx < 0) return;
+  const { h, px, py, valoresLula, valoresAdv, nomeLula, nomeAdv } = layoutGrafico;
+  const p = h[idx];
+
+  const crosshair = $("crosshair");
+  crosshair.setAttribute("x1", px(idx)); crosshair.setAttribute("x2", px(idx)); crosshair.style.opacity = 1;
+
+  const cxA = $("cxA"), cxB = $("cxB");
+  if (valoresLula[idx] !== null) { cxA.setAttribute("cx", px(idx)); cxA.setAttribute("cy", py(valoresLula[idx])); cxA.hidden = false; } else cxA.hidden = true;
+  if (valoresAdv[idx] !== null) { cxB.setAttribute("cx", px(idx)); cxB.setAttribute("cy", py(valoresAdv[idx])); cxB.hidden = false; } else cxB.hidden = true;
+
+  const hora = new Date(p.t).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const linha = (nome, v, classe) => v === null ? "" :
+    `<div class="tt-row"><span class="tt-chave"><i class="${classe}"></i>${esc(nome)}</span><b>${pct(v)}</b></div>`;
+  $("tooltipGrafico").innerHTML = `<div class="tt-hora">${hora}</div>${linha(nomeLula, valoresLula[idx], "serie-a")}${linha(nomeAdv, valoresAdv[idx], "serie-b")}`;
+  $("tooltipGrafico").hidden = false;
+
+  const svg = $("svgGrafico");
+  const rect = svg.getBoundingClientRect();
+  const escalaX = rect.width / SVG_W;
+  $("tooltipGrafico").style.left = `${px(idx) * escalaX}px`;
+  $("tooltipGrafico").style.top = "0px";
+}
+
+function esconderTooltipGrafico() {
+  $("tooltipGrafico").hidden = true;
+  const crosshair = $("crosshair"); if (crosshair) crosshair.style.opacity = 0;
+  const cxA = $("cxA"), cxB = $("cxB");
+  if (cxA) cxA.hidden = true; if (cxB) cxB.hidden = true;
+}
+
+function desenharTabelaGrafico() {
+  if (!layoutGrafico) { $("tabelaGrafico").innerHTML = ""; return; }
+  const { h, valoresLula, valoresAdv, nomeLula, nomeAdv } = layoutGrafico;
+  const linhas = h.map((p, i) =>
+    `<tr><td>${new Date(p.t).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</td>
+      <td>${valoresLula[i] === null ? "—" : pct(valoresLula[i])}</td>
+      <td>${valoresAdv[i] === null ? "—" : pct(valoresAdv[i])}</td></tr>`).join("");
+  $("tabelaGrafico").innerHTML =
+    `<table><thead><tr><th>Hora</th><th>${esc(nomeLula)}</th><th>${esc(nomeAdv)}</th></tr></thead><tbody>${linhas}</tbody></table>`;
 }
 
 function estadoDaTela(r) {
@@ -273,6 +489,7 @@ async function atualizar() {
         "O TSE ainda não publicou os dados do 1º turno.";
       $("duelo").innerHTML = `<div class="votos" style="grid-column:1/-1;text-align:center;padding:30px 0">Aguardando a primeira apuração…</div>`;
       $("barra").innerHTML = ""; $("lider").innerHTML = ""; $("stats").innerHTML = ""; $("outros").hidden = true;
+      desenharGrafico();
       $("estado").textContent = `aguardando · verificado às ${new Date().toLocaleTimeString("pt-BR")}`;
       $("dot").className = "dot espera";
     } else {
@@ -309,6 +526,37 @@ $("tema").onclick = e => {
   const t = document.documentElement;
   const escuro = t.dataset.theme === "dark" || (!t.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
   t.dataset.theme = escuro ? "light" : "dark";
+};
+
+// ===== interação do gráfico (hover + teclado) =====
+const svgGrafico = $("svgGrafico");
+svgGrafico.addEventListener("pointermove", e => {
+  if (!layoutGrafico) return;
+  const rect = svgGrafico.getBoundingClientRect();
+  const xSvg = (e.clientX - rect.left) / rect.width * SVG_W;
+  indiceAtivo = indicePeloX(xSvg);
+  mostrarTooltipGrafico(indiceAtivo);
+});
+svgGrafico.addEventListener("pointerleave", () => { indiceAtivo = -1; esconderTooltipGrafico(); });
+svgGrafico.addEventListener("focus", () => {
+  if (!layoutGrafico) return;
+  indiceAtivo = layoutGrafico.h.length - 1;
+  mostrarTooltipGrafico(indiceAtivo);
+});
+svgGrafico.addEventListener("blur", esconderTooltipGrafico);
+svgGrafico.addEventListener("keydown", e => {
+  if (!layoutGrafico) return;
+  const ultimo = layoutGrafico.h.length - 1;
+  if (e.key === "ArrowLeft") { indiceAtivo = Math.max(0, (indiceAtivo < 0 ? ultimo : indiceAtivo) - 1); mostrarTooltipGrafico(indiceAtivo); e.preventDefault(); }
+  else if (e.key === "ArrowRight") { indiceAtivo = Math.min(ultimo, (indiceAtivo < 0 ? ultimo : indiceAtivo) + 1); mostrarTooltipGrafico(indiceAtivo); e.preventDefault(); }
+  else if (e.key === "Escape") { indiceAtivo = -1; esconderTooltipGrafico(); }
+});
+
+$("toggleTabela").onclick = () => {
+  const box = $("tabelaGrafico");
+  box.hidden = !box.hidden;
+  $("toggleTabela").textContent = box.hidden ? "ver como tabela" : "esconder tabela";
+  if (!box.hidden) desenharTabelaGrafico();
 };
 
 // ===== abas (1º / 2º turno) =====
