@@ -559,10 +559,11 @@ function desenharTabelaGrafico() {
 
 // ===== notícias dos candidatos (Google Notícias via rss2json) =====
 const NOTICIAS_TTL = 10 * 60 * 1000; // não busca de novo pro mesmo candidato antes de 10 min
+const NOTICIAS_TTL_ERRO = 30 * 1000;  // falha é passageira (rss2json oscila): tenta de novo logo
 const noticiasCache = {};            // número do candidato -> { items, erro, quando }
 let noticiasToken = 0;
 
-const urlGoogleNews = nome => `https://news.google.com/rss/search?q=${encodeURIComponent(nome)}&hl=pt-BR&gl=BR&ceid=BR:pt-BR`;
+const urlGoogleNews = consulta => `https://news.google.com/rss/search?q=${encodeURIComponent(consulta)}&hl=pt-BR&gl=BR&ceid=BR:pt-BR`;
 const urlBuscaGoogleNews = nome => `https://news.google.com/search?q=${encodeURIComponent(nome)}&hl=pt-BR&gl=BR&ceid=BR:pt-BR`;
 
 function formatarDataNoticia(s) {
@@ -571,25 +572,37 @@ function formatarDataNoticia(s) {
   return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) + " " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 }
 
+async function baixarNoticias(consulta) {
+  const url = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(urlGoogleNews(consulta))}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  const d = await r.json();
+  if (d.status !== "ok") throw new Error("rss2json: " + d.status);
+  if (!(d.items || []).length) throw new Error("sem itens");
+  return d.items;
+}
+
 async function buscarNoticias(n, nome) {
   const atual = noticiasCache[n];
-  if (atual && Date.now() - atual.quando < NOTICIAS_TTL) return atual;
+  if (atual && Date.now() - atual.quando < (atual.erro ? NOTICIAS_TTL_ERRO : NOTICIAS_TTL)) return atual;
   const estado = { items: null, erro: false, quando: Date.now() };
   noticiasCache[n] = estado;
-  try {
-    const url = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(urlGoogleNews(nome))}`;
-    const r = await fetch(url);
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    const d = await r.json();
-    if (d.status !== "ok") throw new Error("rss2json: " + d.status);
-    estado.items = (d.items || []).slice(0, 4).map(it => {
-      const partes = String(it.title || "").split(" - ");
-      const fonte = partes.length > 1 ? partes.pop() : "";
-      return { titulo: partes.join(" - "), fonte, link: it.link, quando: it.pubDate };
-    });
-  } catch (e) {
-    estado.erro = true;
+  // o rss2json falha de vez em quando (HTTP 500) mesmo com a consulta certa: tenta de novo com variações
+  const consultas = [nome, `"${nome}"`, `${nome} when:7d`];
+  let items = null;
+  for (let i = 0; i < consultas.length && !items; i++) {
+    try {
+      items = await baixarNoticias(consultas[i]);
+    } catch (e) {
+      if (i < consultas.length - 1) await new Promise(ok => setTimeout(ok, 800));
+    }
   }
+  if (!items) { estado.erro = true; return estado; }
+  estado.items = items.slice(0, 4).map(it => {
+    const partes = String(it.title || "").split(" - ");
+    const fonte = partes.length > 1 ? partes.pop() : "";
+    return { titulo: partes.join(" - "), fonte, link: it.link, quando: it.pubDate };
+  });
   return estado;
 }
 
