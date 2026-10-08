@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Presidente — 1º turno</title>
+<style>
+/* Paleta da bandeira: verde #009c3b · amarelo #ffdf00 · azul #002776 */
+:root {
+  --bg: #f2f8f3; --card: #ffffff; --text: #0b2440; --muted: #4b6077; --line: #d9e6dc;
+  --verde: #009c3b; --amarelo: #ffdf00; --azul: #002776;
+  --c1: #009c3b; --c2: #002776; --other: #7b8ea3;
+  --ok: #009c3b; --warn: #b07800;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #00142e; --card: #062445; --text: #f4f8ff; --muted: #a3bcd9; --line: #173e66;
+    --verde: #1fbf5a; --c1: #2fd46e; --c2: #6f9bff; --other: #6f859f;
+    --ok: #2fd46e; --warn: #ffdf00;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #00142e; --card: #062445; --text: #f4f8ff; --muted: #a3bcd9; --line: #173e66;
+  --verde: #1fbf5a; --c1: #2fd46e; --c2: #6f9bff; --other: #6f859f;
+  --ok: #2fd46e; --warn: #ffdf00;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 "Segoe UI", system-ui, sans-serif; }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 0 16px 28px; display: grid; gap: 16px; }
+
+/* cabeçalho na cor da bandeira */
+.topo { margin: 0 -16px; padding: 18px 24px 16px; background: var(--verde); color: #fff; position: relative; }
+.topo::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: var(--amarelo); }
+.topo-in { max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.titulo { margin: 0; font-size: 24px; letter-spacing: -.01em; font-weight: 800; }
+.titulo small { display: block; font-size: 14px; font-weight: 600; color: var(--amarelo); margin-top: 2px; }
+.pill { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 999px;
+        background: var(--azul); color: #fff; font-size: 13px; font-weight: 600; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--amarelo); box-shadow: 0 0 0 0 rgba(255,223,0,.7); animation: pulse 1.6s infinite; }
+.dot.espera { background: #fff; animation: none; }
+.dot.fim { background: var(--amarelo); animation: none; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255,223,0,.7); } 70% { box-shadow: 0 0 0 9px rgba(255,223,0,0); } 100% { box-shadow: 0 0 0 0 rgba(255,223,0,0); } }
+
+.aviso { padding: 11px 14px; border-radius: 10px; background: var(--amarelo); color: var(--azul); font-weight: 600; font-size: 14px; }
+
+/* disputa principal */
+.disputa { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 22px 22px 20px;
+           box-shadow: 0 6px 22px rgba(0,39,118,.08); position: relative; overflow: hidden; }
+.disputa::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 6px; background: linear-gradient(90deg, var(--c1) 50%, var(--c2) 50%); }
+.duelo { display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center; }
+.cand { position: relative; }
+.cand.dir { text-align: right; }
+.num { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; font-weight: 600; }
+.nome { font-size: 23px; font-weight: 800; margin: 2px 0; }
+.partido { font-size: 13px; color: var(--muted); font-weight: 600; }
+.pct { font-size: 60px; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; margin-top: 10px; }
+.votos { font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; margin-top: 4px; }
+.delta { color: var(--ok); font-weight: 800; margin-left: 6px; }
+.c1 { color: var(--c1); } .c2 { color: var(--c2); }
+.vs { width: 46px; height: 46px; border-radius: 50%; background: var(--amarelo); color: var(--azul);
+      display: grid; place-items: center; font-weight: 900; font-size: 15px; box-shadow: 0 0 0 4px var(--card); }
+.badge { display: inline-block; font-size: 11px; font-weight: 900; letter-spacing: .05em; padding: 3px 9px;
+         border-radius: 999px; background: var(--amarelo); color: var(--azul); margin-left: 8px; vertical-align: middle; }
+
+.barra { display: flex; height: 26px; border-radius: 13px; overflow: hidden; background: var(--line); margin-top: 20px; }
+.barra i { display: block; height: 100%; transition: width .8s ease; }
+.lider-txt { margin-top: 12px; text-align: center; font-size: 17px; }
+.lider-txt b { font-variant-numeric: tabular-nums; }
+
+/* apuração */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.stat { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; border-left: 5px solid var(--amarelo); }
+.stat:nth-child(2) { border-left-color: var(--verde); }
+.stat:nth-child(3) { border-left-color: var(--azul); }
+.stat .rot { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; font-weight: 700; }
+.stat .val { font-size: 25px; font-weight: 800; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.stat .sub { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.stat .bar { height: 7px; background: var(--line); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+.stat .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--verde), var(--amarelo)); transition: width .8s ease; }
+
+/* demais candidatos */
+.outros { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; }
+.outros h3 { margin: 0 0 6px; font-size: 13px; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: .05em; }
+.linha { display: grid; grid-template-columns: 42px 1fr 110px 74px; gap: 10px; align-items: center; padding: 7px 0;
+         border-top: 1px solid var(--line); font-size: 14px; font-variant-numeric: tabular-nums; }
+.linha:first-of-type { border-top: 0; }
+.linha .n { font-weight: 800; color: var(--verde); }
+.linha .bar { height: 7px; background: var(--line); border-radius: 4px; overflow: hidden; }
+.linha .bar i { display: block; height: 100%; background: var(--other); }
+.linha .p { text-align: right; font-weight: 700; }
+
+.flash { animation: flash 1.6s; }
+@keyframes flash { 0% { background: rgba(255, 223, 0, .45); } 100% { background: transparent; } }
+
+footer { font-size: 12.5px; color: var(--muted); text-align: center; padding-top: 4px; }
+footer a { color: var(--verde); font-weight: 700; }
+
+@media (max-width: 640px) {
+  .duelo { grid-template-columns: 1fr; }
+  .cand.dir { text-align: left; }
+  .vs { justify-self: center; }
+  .pct { font-size: 48px; }
+  .linha { grid-template-columns: 34px 1fr 64px; }
+  .linha .bar { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="topo">
+    <div class="topo-in">
+      <h1 class="titulo">Presidente da República
+        <small id="subt">1º turno · 04/10/2026</small></h1>
+      <div class="pill"><span class="dot" id="dot"></span><span id="estado">iniciando…</span></div>
+    </div>
+  </header>
+
+  <div class="aviso" id="aviso" hidden></div>
+
+  <section class="disputa" id="disputa">
+    <div class="duelo" id="duelo"></div>
+    <div class="barra" id="barra"></div>
+    <div class="lider-txt" id="lider"></div>
+  </section>
+
+  <section class="stats" id="stats"></section>
+
+  <section class="outros" id="outros" hidden></section>
+
+  <footer>
+    Fonte: TSE (resultados.tse.jus.br). Atualiza a cada 30 s; o TSE renova os arquivos a cada ~1 min, então o painel pode ficar um pouco atrás da apuração.
+    <br>Tema: <a href="#" id="tema">trocar claro/escuro</a>
+  </footer>
+</div>
+
+<script>
+// ===== configuração =====
+const BASE = "https://resultados.tse.jus.br/oficial/ele2026";
+const SEGUNDO_TURNO = new URLSearchParams(location.search).has("2turno");   // ?2turno=1 mostra o 2º turno (a partir de 25/10)
+const ELEICAO = SEGUNDO_TURNO ? "6258" : "6257";                             // 6257 = 1º turno · 6258 = 2º turno presidente
+const INTERVALO = 30;                                                 // segundos
+
+// ===== utilitários =====
+const $ = id => document.getElementById(id);
+const fmt = n => Number(n || 0).toLocaleString("pt-BR");
+const pct = (x, d = 2) => Number(x || 0).toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d }) + "%";
+const num = s => parseFloat(String(s ?? "0").replace(",", ".")) || 0;
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+// ===== dados =====
+async function buscar() {
+  const r = await fetch(`${BASE}/${ELEICAO}/dados/br/br-c0001-e00${ELEICAO}-u.json`, { cache: "no-store" });
+  if (r.status === 404 || r.status === 403) return null;     // ainda não publicado
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  return r.json();
+}
+
+function interpretar(d) {
+  const cands = [];
+  for (const agr of d.carg?.[0]?.agr || [])
+    for (const par of agr.par || [])
+      for (const c of par.cand || [])
+        cands.push({ n: c.n, nm: c.nmu, par: par.sg, votos: +c.vap || 0, pct: num(c.pvapn ?? c.pvap),
+                     st: c.st || "", eleito: /^Eleito/.test(c.st || "") });
+  cands.sort((a, b) => b.votos - a.votos);
+  return {
+    cands,
+    pst: num(d.s?.pstn ?? d.s?.pst), secOk: +d.s?.st || 0, secTot: +d.s?.ts || 0,
+    aptos: +d.e?.te || 0, comp: +d.e?.c || 0, pc: num(d.e?.pcn ?? d.e?.pc),
+    abst: +d.e?.a || 0, pa: num(d.e?.pan ?? d.e?.pa),
+    brancos: +d.v?.vb || 0, pbr: num(d.v?.pvbn ?? d.v?.pvb),
+    nulos: +d.v?.tvn || 0, pnu: num(d.v?.ptvnn ?? d.v?.ptvn),
+    validos: +d.v?.vv || 0,
+    quando: `${d.dg} às ${d.hg}`, totalizado: d.tf === "s"
+  };
+}
+
+// ===== desenho =====
+const anterior = {};          // votos da atualização anterior, para mostrar o "+N"
+// cor fixa por candidato (Lula = 13 verde, o outro = azul), para não trocar quando alguém vira líder
+const cor = c => (c.n === "13" ? "c1" : "c2");
+
+function desenhar(r) {
+  const [a, b] = r.cands;
+  const restantes = r.cands.slice(2);
+
+  // duelo: os dois primeiros colocados
+  const linha = (c, lado) => {
+    const d = anterior[c.n] !== undefined ? c.votos - anterior[c.n] : 0;
+    return `<div class="cand ${lado === "dir" ? "dir" : ""}${d > 0 ? " flash" : ""}">
+      <div class="num">${esc(c.n)}</div>
+      <div class="nome ${cor(c)}">${esc(c.nm)}${c.eleito ? '<span class="badge">ELEITO</span>' : ""}</div>
+      <div class="partido">${esc(c.par)}</div>
+      <div class="pct ${cor(c)}">${pct(c.pct)}</div>
+      <div class="votos">${fmt(c.votos)} votos${d > 0 ? `<span class="delta">+${fmt(d)}</span>` : ""}</div>
+    </div>`;
+  };
+  let duelo = a ? linha(a, "esq") : "";
+  duelo += `<div class="vs">X</div>`;
+  duelo += b ? linha(b, "dir") : `<div></div>`;
+  $("duelo").innerHTML = duelo;
+
+  // barra proporcional aos dois primeiros (votos válidos entre eles)
+  const soma = (a?.votos || 0) + (b?.votos || 0) || 1;
+  const barraDe = c => c ? `<i style="width:${100 * c.votos / soma}%;background:var(--${cor(c) === "c1" ? "c1" : "c2"})"></i>` : "";
+  $("barra").innerHTML = barraDe(a) + barraDe(b);
+
+  if (a && b) {
+    const dif = a.votos - b.votos;
+    $("lider").innerHTML = dif === 0 ? "Empate técnico em votos."
+      : `<b>${esc(dif > 0 ? a.nm : b.nm)}</b> lidera por <b>${fmt(Math.abs(dif))}</b> votos`;
+  }
+
+  // números da apuração
+  const st = (rot, val, sub, bar) => `<div class="stat"><div class="rot">${rot}</div>
+    <div class="val">${val}</div><div class="sub">${sub}</div>
+    ${bar !== undefined ? `<div class="bar"><i style="width:${bar}%"></i></div>` : ""}</div>`;
+  $("stats").innerHTML =
+    st("Seções apuradas", pct(r.pst), `${fmt(r.secOk)} de ${fmt(r.secTot)}`, r.pst) +
+    st("Comparecimento", pct(r.pc), `${fmt(r.comp)} de ${fmt(r.aptos)} eleitores`, r.pc) +
+    st("Abstenção", pct(r.pa), `${fmt(r.abst)} eleitores`) +
+    st("Brancos", pct(r.pbr), `${fmt(r.brancos)} votos`) +
+    st("Nulos", pct(r.pnu), `${fmt(r.nulos)} votos`);
+
+  // demais candidatos (só aparece quando há mais de dois)
+  const box = $("outros");
+  if (restantes.length) {
+    box.hidden = false;
+    box.innerHTML = `<h3>Outros candidatos</h3>` + restantes.map(c => `
+      <div class="linha"><span class="n">${esc(c.n)}</span>
+        <span>${esc(c.nm)} <span style="color:var(--muted)">${esc(c.par)}</span></span>
+        <div class="bar"><i style="width:${Math.min(100, c.pct)}%"></i></div>
+        <span class="p">${pct(c.pct)}</span></div>`).join("");
+  } else box.hidden = true;
+
+  r.cands.forEach(c => anterior[c.n] = c.votos);
+}
+
+function estadoDaTela(r) {
+  if (!r) return ["aguardando", "espera"];
+  if (r.totalizado) return ["apuração encerrada", "fim"];
+  return ["ao vivo", ""];
+}
+
+// ===== ciclo =====
+let proximo = 0, buscando = false;
+
+async function atualizar() {
+  if (buscando) return;
+  buscando = true;
+  try {
+    const d = await buscar();
+    if (!d) {
+      $("aviso").hidden = false;
+      $("aviso").textContent = SEGUNDO_TURNO ?
+        "O TSE ainda não publicou os dados do 2º turno. Esta tela consulta sozinha a cada 30 s e começa a mostrar a apuração assim que os dados saírem (a votação começa às 8h do dia 25/10)." :
+        "O TSE ainda não publicou os dados do 1º turno.";
+      $("duelo").innerHTML = `<div class="votos" style="grid-column:1/-1;text-align:center;padding:30px 0">Aguardando a primeira apuração…</div>`;
+      $("barra").innerHTML = ""; $("lider").innerHTML = ""; $("stats").innerHTML = ""; $("outros").hidden = true;
+      $("estado").textContent = `aguardando · verificado às ${new Date().toLocaleTimeString("pt-BR")}`;
+      $("dot").className = "dot espera";
+    } else {
+      const r = interpretar(d);
+      $("aviso").hidden = true;
+      desenhar(r);
+      const [txt, cls] = estadoDaTela(r);
+      $("estado").textContent = `${txt} · atualizado ${new Date().toLocaleTimeString("pt-BR")}`;
+      $("dot").className = "dot " + cls;
+    }
+    proximo = Date.now() + INTERVALO * 1000;
+  } catch (e) {
+    $("estado").textContent = "erro ao consultar o TSE, tentando de novo";
+    $("dot").className = "dot espera";
+    proximo = Date.now() + 10000;
+  } finally {
+    buscando = false;
+  }
+}
+
+function relogio() {
+  if (buscando) return;
+  if (Date.now() >= proximo) atualizar();
+  else {
+    const s = Math.ceil((proximo - Date.now()) / 1000);
+    const base = $("estado").textContent.replace(/ · próxima em \d+s$/, "");
+    $("estado").textContent = base + ` · próxima em ${s}s`;
+  }
+}
+
+// ===== tema claro/escuro =====
+$("tema").onclick = e => {
+  e.preventDefault();
+  const t = document.documentElement;
+  const escuro = t.dataset.theme === "dark" || (!t.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
+  t.dataset.theme = escuro ? "light" : "dark";
+};
+
+$("subt").textContent = SEGUNDO_TURNO ? "2º turno · 25/10/2026" : "1º turno · 04/10/2026";
+document.title = SEGUNDO_TURNO ? "Presidente — 2º turno" : "Presidente — 1º turno";
+atualizar();
+setInterval(relogio, 1000);
+</script>
+</body>
+</html>
