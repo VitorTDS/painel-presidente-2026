@@ -307,7 +307,7 @@ footer a { color: var(--verde); font-weight: 700; }
   </section>
 
   <footer>
-    Fonte: TSE (resultados.tse.jus.br). Atualiza a cada 30 s; o TSE renova os arquivos a cada ~1 min, então o painel pode ficar um pouco atrás da apuração.
+    Fonte: TSE (resultados.tse.jus.br). <span id="rodapeAtualiza">Atualiza a cada 30 s; o TSE renova os arquivos a cada ~1 min, então o painel pode ficar um pouco atrás da apuração.</span>
     <br>Tema: <a href="#" id="tema">trocar claro/escuro</a>
   </footer>
 </div>
@@ -329,6 +329,9 @@ const num = s => parseFloat(String(s ?? "0").replace(",", ".")) || 0;
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 // ===== dados =====
+// o TSE publica os nomes de urna sem acento; aqui fica a grafia correta para exibir (pelo número do candidato)
+const NOME_EXIBIDO = { "22": "FLÁVIO BOLSONARO" };
+
 async function buscar() {
   const ele = ELEICAO[turno];
   const r = await fetch(`${BASE}/${ele}/dados/br/br-c0001-e00${ele}-u.json`, { cache: "no-store" });
@@ -342,7 +345,7 @@ function interpretar(d) {
   for (const agr of d.carg?.[0]?.agr || [])
     for (const par of agr.par || [])
       for (const c of par.cand || [])
-        cands.push({ n: c.n, nm: c.nmu, par: par.sg, votos: +c.vap || 0, pct: num(c.pvapn ?? c.pvap),
+        cands.push({ n: c.n, nm: NOME_EXIBIDO[c.n] || c.nmu, par: par.sg, votos: +c.vap || 0, pct: num(c.pvapn ?? c.pvap),
                      st: c.st || "", eleito: /^Eleito/.test(c.st || "") });
   cands.sort((a, b) => b.votos - a.votos);
   return {
@@ -712,13 +715,15 @@ function estadoDaTela(r) {
 // Atualizar à mão quando sair pesquisa nova. Percentuais como divulgados; "base" diz se são votos totais
 // (com brancos/nulos/indecisos) ou válidos. Para totais, os válidos são calculados aqui: Lula ÷ (Lula + Flávio).
 const PESQUISAS_ATUALIZADO = "09/10/2026";
+// Ordem: mais recente primeiro. Rodadas divulgadas antes do 1º turno (04/10) ganham a marca "antes do 1º turno".
 const PESQUISAS = [
+  { inst: "AtlasIntel",    data: "09/10", lula: 47.2, flavio: 52.8, base: "validos", margem: 1,   reg: "BR-03663/2026" },
   { inst: "PoderData/Aya", data: "08/10", lula: 47,   flavio: 53,   base: "validos", margem: 1.8, reg: "BR-08134/2026" },
   { inst: "Datafolha",     data: "08/10", lula: 48,   flavio: 52,   base: "validos", margem: 2,   reg: "BR-02949/2026" },
   { inst: "Quaest",        data: "03/10", lula: 42,   flavio: 44,   base: "totais",  margem: 2,   reg: "BR-02197/2026" },
   { inst: "CNT/MDA",       data: "03/10", lula: 47.3, flavio: 43.1, base: "totais",  margem: 2.2, reg: "BR-04756/2026" },
-  { inst: "AtlasIntel",    data: "03/10", lula: 50.1, flavio: 49.9, base: "validos", margem: 1,   reg: "BR-00999/2026" },
 ];
+const antesDo1oTurno = data => { const [d, m] = data.split("/").map(Number); return m * 100 + d < 1004; };
 
 function validos(p) {
   const t = p.lula + p.flavio;
@@ -728,6 +733,8 @@ function validos(p) {
 function desenharPesquisas() {
   const box = $("pesquisasCard");
   const comDados = PESQUISAS.filter(p => !p.aguardando);   // pesquisa aguardando divulgação não entra na média
+  const antigas = comDados.filter(p => antesDo1oTurno(p.data)).map(p => esc(p.inst));
+  const totais = comDados.filter(p => p.base === "totais").map(p => esc(p.inst));
   const v = comDados.map(validos);
   const n = v.length;
   const mLula = v.reduce((a, x) => a + x.lula, 0) / n;
@@ -746,7 +753,7 @@ function desenharPesquisas() {
       <div class="pesq-nums"><span class="pesq-espera">aguardando nova rodada</span></div></li>`;
     const i = k++;
     return `
-    <li><div class="pesq-topo"><b>${esc(p.inst)}</b><span>divulgada em ${esc(p.data)} · margem ±${p.margem.toLocaleString("pt-BR")} p.p.</span></div>
+    <li><div class="pesq-topo"><b>${esc(p.inst)}</b><span>divulgada em ${esc(p.data)}${antesDo1oTurno(p.data) ? " (antes do 1º turno)" : ""} · margem ±${p.margem.toLocaleString("pt-BR")} p.p.</span></div>
       <div class="pesq-barra" role="img" aria-label="${esc(p.inst)}: Lula ${pct(v[i].lula, 1)}, Flávio Bolsonaro ${pct(v[i].flavio, 1)} dos votos válidos">
         <i class="c1" style="width:${v[i].lula}%"></i><i class="c2" style="width:${v[i].flavio}%"></i></div>
       <div class="pesq-nums"><span class="c1">Lula ${pct(v[i].lula, 1)}</span><span class="c2">Flávio ${pct(v[i].flavio, 1)}</span></div></li>`;
@@ -754,7 +761,7 @@ function desenharPesquisas() {
   box.innerHTML = `<h3>Pesquisas do 2º turno · Lula x Flávio</h3>
     <p class="pesq-resumo">${resumo}</p>
     <ul class="pesq-lista">${linhas}</ul>
-    <p class="pesq-nota">Todos os números em votos válidos (excluindo brancos, nulos e indecisos). Quaest e CNT/MDA divulgam votos totais, e a conversão para válidos é cálculo deste painel. A média é simples, sem ponderar amostra nem data. Pesquisa não é previsão: só o voto de 25/10 decide. Atualizado em ${PESQUISAS_ATUALIZADO}. Registros no TSE: ${comDados.map(p => esc(p.reg)).join(", ")}.</p>`;
+    <p class="pesq-nota">Todos os números em votos válidos (excluindo brancos, nulos e indecisos). ${totais.length ? `${totais.join(" e ")} ${totais.length > 1 ? "divulgam" : "divulga"} votos totais, e a conversão para válidos é cálculo deste painel.` : ""} A média é simples, sem ponderar amostra nem data${antigas.length ? `; ${antigas.join(" e ")} ainda não ${antigas.length > 1 ? "divulgaram" : "divulgou"} rodada depois do 1º turno` : ""}. Pesquisa não é previsão: só o voto de 25/10 decide. Atualizado em ${PESQUISAS_ATUALIZADO}. Registros no TSE: ${comDados.map(p => esc(p.reg)).join(", ")}.</p>`;
   box.hidden = false;
 }
 
@@ -864,6 +871,24 @@ $("mapaToggle").onclick = () => {
 
 // ===== ciclo =====
 let proximo = 0, buscando = false, totalizadoAtual = false;
+let turnoNaTela = null;      // de qual turno são os números desenhados agora (null = nenhum)
+const RODAPE_AO_VIVO = $("rodapeAtualiza").textContent;
+
+// painel sem apuração: mostra o aviso, esvazia o placar e, no 2º turno, as pesquisas
+function painelSemDados(aviso, textoDuelo) {
+  $("aviso").hidden = false;
+  $("aviso").textContent = aviso;
+  $("duelo").innerHTML = `<div class="votos" style="grid-column:1/-1;text-align:center;padding:30px 0">${textoDuelo}</div>`;
+  $("barra").innerHTML = ""; $("lider").innerHTML = ""; $("stats").innerHTML = ""; $("outros").hidden = true;
+  const card = $("duelo").closest(".disputa");
+  card.style.removeProperty("--faixa-esq"); card.style.removeProperty("--faixa-dir");
+  $("noticiasCard").hidden = true;
+  $("mapaCard").hidden = true;
+  if (turno === 2) desenharPesquisas(); else $("pesquisasCard").hidden = true;
+  desenharGrafico();
+  $("rodapeAtualiza").textContent = RODAPE_AO_VIVO;
+  turnoNaTela = null;
+}
 
 async function atualizar() {
   if (buscando) return;
@@ -871,18 +896,9 @@ async function atualizar() {
   try {
     const d = await buscar();
     if (!d) {
-      $("aviso").hidden = false;
-      $("aviso").textContent = turno === 2 ?
+      painelSemDados(turno === 2 ?
         "O TSE ainda não publicou os dados do 2º turno. Esta tela consulta sozinha a cada 30 s e começa a mostrar a apuração assim que os dados saírem (a votação começa às 8h do dia 25/10)." :
-        "O TSE ainda não publicou os dados do 1º turno.";
-      $("duelo").innerHTML = `<div class="votos" style="grid-column:1/-1;text-align:center;padding:30px 0">Aguardando a primeira apuração…</div>`;
-      $("barra").innerHTML = ""; $("lider").innerHTML = ""; $("stats").innerHTML = ""; $("outros").hidden = true;
-      const card = $("duelo").closest(".disputa");
-      card.style.removeProperty("--faixa-esq"); card.style.removeProperty("--faixa-dir");
-      $("noticiasCard").hidden = true;
-      $("mapaCard").hidden = true;
-      if (turno === 2) desenharPesquisas(); else $("pesquisasCard").hidden = true;
-      desenharGrafico();
+        "O TSE ainda não publicou os dados do 1º turno.", "Aguardando a primeira apuração…");
       $("estado").textContent = `aguardando · verificado às ${new Date().toLocaleTimeString("pt-BR")}`;
       $("dot").className = "dot espera";
     } else {
@@ -890,16 +906,27 @@ async function atualizar() {
       $("aviso").hidden = true;
       $("pesquisasCard").hidden = true;
       desenhar(r);
+      turnoNaTela = turno;
       atualizarMapa(r.totalizado).catch(() => {});
       const [txt, cls] = estadoDaTela(r);
       totalizadoAtual = r.totalizado;
+      $("rodapeAtualiza").textContent = r.totalizado ? "Apuração encerrada: estes são os números finais divulgados pelo TSE." : RODAPE_AO_VIVO;
       $("estado").textContent = r.totalizado ? "apuração encerrada" : `${txt} · atualizado ${new Date().toLocaleTimeString("pt-BR")}`;
       $("dot").className = "dot " + cls;
     }
     proximo = Date.now() + INTERVALO * 1000;
   } catch (e) {
-    $("estado").textContent = "erro ao consultar o TSE, tentando de novo";
+    // o site de resultados do TSE às vezes responde 503 ou cai sob muito acesso; o problema é de lá, não do painel
+    if (turnoNaTela === turno) {
+      // já há números deste turno na tela: mantém e só avisa no topo
+      $("estado").textContent = "TSE fora do ar no momento · mostrando os últimos números";
+    } else {
+      painelSemDados("O site de resultados do TSE não respondeu agora. Isso costuma acontecer em horários de muito acesso e é um problema do lado do TSE, não deste painel. A tela tenta de novo sozinha a cada 10 s.",
+        "Aguardando resposta do TSE…");
+      $("estado").textContent = "TSE fora do ar no momento";
+    }
     $("dot").className = "dot espera";
+    totalizadoAtual = false;   // garante a contagem "próxima em Ns" enquanto tenta de novo
     proximo = Date.now() + 10000;
   } finally {
     buscando = false;
