@@ -18,7 +18,9 @@
 <style>
 /* Paleta da bandeira: verde #009c3b · amarelo #ffdf00 · azul #002776 */
 :root {
-  --mapa-lula: #d62828; --mapa-flavio: #0a8f3c;
+  /* mapa usa as mesmas cores do resto do painel (Lula = c1, Flávio = c2) */
+  --mapa-lula: var(--c1); --mapa-flavio: var(--c2);
+  --sem-dados: color-mix(in srgb, var(--muted) 22%, var(--card));
   --bg: #f2f8f3; --card: #ffffff; --text: #0b2440; --muted: #4b6077; --line: #d9e6dc;
   --verde: #009c3b; --amarelo: #ffdf00; --azul: #002776;
   --c1: #009c3b; --c2: #002776; --other: #7b8ea3;
@@ -29,14 +31,12 @@
     --bg: #00142e; --card: #062445; --text: #f4f8ff; --muted: #a3bcd9; --line: #173e66;
     --verde: #1fbf5a; --c1: #2fd46e; --c2: #6f9bff; --other: #6f859f;
     --ok: #2fd46e; --warn: #ffdf00;
-    --mapa-lula: #ff6b6b; --mapa-flavio: #2fd46e;
   }
 }
 :root[data-theme="dark"] {
   --bg: #00142e; --card: #062445; --text: #f4f8ff; --muted: #a3bcd9; --line: #173e66;
   --verde: #1fbf5a; --c1: #2fd46e; --c2: #6f9bff; --other: #6f859f;
   --ok: #2fd46e; --warn: #ffdf00;
-    --mapa-lula: #ff6b6b; --mapa-flavio: #2fd46e;
 }
 * { box-sizing: border-box; }
 html, body { max-width: 100%; overflow-x: hidden; }
@@ -66,12 +66,12 @@ body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 "Se
 .aba { padding: 9px 18px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--muted);
        font-weight: 800; font-size: 13px; cursor: pointer; font-family: inherit; }
 .aba.ativa { background: var(--azul); color: #fff; border-color: var(--azul); }
-.aba:not(.ativa):hover { border-color: var(--azul); color: var(--azul); }
+.aba:not(.ativa):hover { border-color: var(--c2); color: var(--c2); }
 
 /* disputa principal */
 .disputa { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 22px 22px 20px;
            box-shadow: 0 6px 22px rgba(0,39,118,.08); position: relative; overflow: hidden; }
-.disputa::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 6px; background: linear-gradient(90deg, var(--c1) 50%, var(--c2) 50%); }
+.disputa::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 6px; background: linear-gradient(90deg, var(--faixa-esq, var(--c1)) 50%, var(--faixa-dir, var(--c2)) 50%); }
 .duelo { display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center; }
 .cand { position: relative; }
 .cand.dir { text-align: right; }
@@ -183,13 +183,13 @@ body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 "Se
 .mapa-wrap svg { display: block; width: 100%; height: auto; }
 .mapa-uf { stroke: var(--card); stroke-width: 1.2; stroke-linejoin: round; cursor: pointer; }
 .mapa-uf:hover, .mapa-uf:focus { stroke: var(--text); stroke-width: 2; outline: none; }
-.mapa-uf.semdados { fill: var(--line); cursor: default; }
+.mapa-uf.semdados { fill: var(--sem-dados); cursor: default; }
 .mapa-tip { position: absolute; z-index: 2; pointer-events: none; background: var(--text); color: var(--bg); border-radius: 8px; padding: 8px 10px; font-size: 12.5px; line-height: 1.4; box-shadow: 0 4px 14px rgba(0,0,0,.25); min-width: 150px; }
 .mapa-tip b { display: block; font-size: 13.5px; margin-bottom: 2px; }
 .mapa-leg { display: flex; flex-wrap: wrap; gap: 6px 16px; justify-content: center; margin: 12px 0 0; font-size: 12.5px; color: var(--muted); }
 .mapa-leg span { display: inline-flex; align-items: center; gap: 6px; }
 .mapa-leg i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
-.mapa-leg i.l { background: var(--mapa-lula); } .mapa-leg i.f { background: var(--mapa-flavio); } .mapa-leg i.s { background: var(--line); }
+.mapa-leg i.l { background: var(--mapa-lula); } .mapa-leg i.f { background: var(--mapa-flavio); } .mapa-leg i.s { background: var(--sem-dados); }
 .mapa-tabela-btn { display: block; margin: 10px auto 0; background: none; border: 0; padding: 0; font: inherit; font-size: 12.5px; font-weight: 700; color: var(--verde); cursor: pointer; text-decoration: underline; }
 .mapa-tabela { margin-top: 10px; overflow-x: auto; }
 .mapa-tabela table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
@@ -382,6 +382,10 @@ function desenhar(r) {
   duelo += `<div class="vs">X</div>`;
   duelo += b ? linha(b, "dir") : `<div></div>`;
   $("duelo").innerHTML = duelo;
+  // faixa colorida do topo segue o lado de cada candidato (o líder fica à esquerda)
+  const card = $("duelo").closest(".disputa");
+  if (a) card.style.setProperty("--faixa-esq", `var(--${cor(a)})`);
+  if (b) card.style.setProperty("--faixa-dir", `var(--${cor(b)})`);
 
   // barra proporcional aos dois primeiros (votos válidos entre eles)
   const soma = (a?.votos || 0) + (b?.votos || 0) || 1;
@@ -707,10 +711,10 @@ function estadoDaTela(r) {
 // ===== pesquisas do 2º turno (mostradas enquanto o TSE não publica a apuração) =====
 // Atualizar à mão quando sair pesquisa nova. Percentuais como divulgados; "base" diz se são votos totais
 // (com brancos/nulos/indecisos) ou válidos. Para totais, os válidos são calculados aqui: Lula ÷ (Lula + Flávio).
-const PESQUISAS_ATUALIZADO = "08/10/2026";
+const PESQUISAS_ATUALIZADO = "09/10/2026";
 const PESQUISAS = [
   { inst: "PoderData/Aya", data: "08/10", lula: 47,   flavio: 53,   base: "validos", margem: 1.8, reg: "BR-08134/2026" },
-  { inst: "Datafolha",     aguardando: true, detalhe: "nova rodada registrada (BR-02949/2026), divulgação prevista para 08/10 às 18h45" },
+  { inst: "Datafolha",     data: "08/10", lula: 48,   flavio: 52,   base: "validos", margem: 2,   reg: "BR-02949/2026" },
   { inst: "Quaest",        data: "03/10", lula: 42,   flavio: 44,   base: "totais",  margem: 2,   reg: "BR-02197/2026" },
   { inst: "CNT/MDA",       data: "03/10", lula: 47.3, flavio: 43.1, base: "totais",  margem: 2.2, reg: "BR-04756/2026" },
   { inst: "AtlasIntel",    data: "03/10", lula: 50.1, flavio: 49.9, base: "validos", margem: 1,   reg: "BR-00999/2026" },
@@ -873,6 +877,8 @@ async function atualizar() {
         "O TSE ainda não publicou os dados do 1º turno.";
       $("duelo").innerHTML = `<div class="votos" style="grid-column:1/-1;text-align:center;padding:30px 0">Aguardando a primeira apuração…</div>`;
       $("barra").innerHTML = ""; $("lider").innerHTML = ""; $("stats").innerHTML = ""; $("outros").hidden = true;
+      const card = $("duelo").closest(".disputa");
+      card.style.removeProperty("--faixa-esq"); card.style.removeProperty("--faixa-dir");
       $("noticiasCard").hidden = true;
       $("mapaCard").hidden = true;
       if (turno === 2) desenharPesquisas(); else $("pesquisasCard").hidden = true;
