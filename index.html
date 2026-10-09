@@ -18,8 +18,8 @@
 <style>
 /* Paleta da bandeira: verde #009c3b · amarelo #ffdf00 · azul #002776 */
 :root {
-  /* mapa usa as mesmas cores do resto do painel (Lula = c1, Flávio = c2) */
-  --mapa-lula: var(--c1); --mapa-flavio: var(--c2);
+  /* cores próprias do mapa (Lula vermelho, Flávio verde), diferentes do placar */
+  --mapa-lula: #d62828; --mapa-flavio: #0a8f3c;
   --sem-dados: color-mix(in srgb, var(--muted) 22%, var(--card));
   --bg: #f2f8f3; --card: #ffffff; --text: #0b2440; --muted: #4b6077; --line: #d9e6dc;
   --verde: #009c3b; --amarelo: #ffdf00; --azul: #002776;
@@ -31,12 +31,14 @@
     --bg: #00142e; --card: #062445; --text: #f4f8ff; --muted: #a3bcd9; --line: #173e66;
     --verde: #1fbf5a; --c1: #2fd46e; --c2: #6f9bff; --other: #6f859f;
     --ok: #2fd46e; --warn: #ffdf00;
+    --mapa-lula: #ff6b6b; --mapa-flavio: #2fd46e;
   }
 }
 :root[data-theme="dark"] {
   --bg: #00142e; --card: #062445; --text: #f4f8ff; --muted: #a3bcd9; --line: #173e66;
   --verde: #1fbf5a; --c1: #2fd46e; --c2: #6f9bff; --other: #6f859f;
   --ok: #2fd46e; --warn: #ffdf00;
+  --mapa-lula: #ff6b6b; --mapa-flavio: #2fd46e;
 }
 * { box-sizing: border-box; }
 html, body { max-width: 100%; overflow-x: hidden; }
