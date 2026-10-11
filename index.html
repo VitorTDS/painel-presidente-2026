@@ -721,9 +721,10 @@ function estadoDaTela(r) {
 // ===== pesquisas do 2º turno (mostradas enquanto o TSE não publica a apuração) =====
 // Atualizar à mão quando sair pesquisa nova. Percentuais como divulgados; "base" diz se são votos totais
 // (com brancos/nulos/indecisos) ou válidos. Para totais, os válidos são calculados aqui: Lula ÷ (Lula + Flávio).
-const PESQUISAS_ATUALIZADO = "09/10/2026";
+const PESQUISAS_ATUALIZADO = "11/10/2026";
 // Ordem: mais recente primeiro. Rodadas divulgadas antes do 1º turno (04/10) ganham a marca "antes do 1º turno".
 const PESQUISAS = [
+  { inst: "Ipespe",        data: "10/10", lula: 47.3, flavio: 52.7, base: "validos", margem: 2.6, reg: "BR-00933/2026" },
   { inst: "AtlasIntel",    data: "09/10", lula: 47.2, flavio: 52.8, base: "validos", margem: 1,   reg: "BR-03663/2026" },
   { inst: "PoderData/Aya", data: "08/10", lula: 47,   flavio: 53,   base: "validos", margem: 1.8, reg: "BR-08134/2026" },
   { inst: "Datafolha",     data: "08/10", lula: 48,   flavio: 52,   base: "validos", margem: 2,   reg: "BR-02949/2026" },
