@@ -642,6 +642,7 @@ const NOTICIAS_URLS = [
 const NOTICIAS_TTL = 5 * 60 * 1000;   // relê o arquivo no máximo a cada 5 min
 const NOTICIAS_TTL_ERRO = 30 * 1000;  // depois de uma falha, tenta de novo logo
 let noticiasArquivo = null;           // { dados, erro, quando }
+let noticiasBaixando = null;          // busca em andamento, compartilhada pelas duas colunas
 let noticiasToken = 0;
 
 const urlBuscaGoogleNews = nome => `https://news.google.com/search?q=${encodeURIComponent(nome)}&hl=pt-BR&gl=BR&ceid=BR:pt-BR`;
@@ -652,11 +653,16 @@ function formatarDataNoticia(s) {
   return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) + " " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 }
 
-async function carregarArquivoNoticias() {
+function carregarArquivoNoticias() {
   const atual = noticiasArquivo;
-  if (atual && Date.now() - atual.quando < (atual.erro ? NOTICIAS_TTL_ERRO : NOTICIAS_TTL)) return atual;
+  if (atual && Date.now() - atual.quando < (atual.erro ? NOTICIAS_TTL_ERRO : NOTICIAS_TTL)) return Promise.resolve(atual);
+  if (!noticiasBaixando)
+    noticiasBaixando = baixarArquivoNoticias(atual).then(estado => { noticiasArquivo = estado; noticiasBaixando = null; return estado; });
+  return noticiasBaixando;
+}
+
+async function baixarArquivoNoticias(atual) {
   const estado = { dados: atual?.dados || null, erro: false, quando: Date.now() };
-  noticiasArquivo = estado;
   for (const url of NOTICIAS_URLS) {
     try {
       const r = await fetch(url, { cache: "no-store" });
