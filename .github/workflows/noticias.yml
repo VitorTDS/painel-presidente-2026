@@ -1,0 +1,35 @@
+name: Atualiza notícias
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"   # a cada 15 min (o GitHub pode atrasar alguns minutos)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: noticias
+  cancel-in-progress: false
+
+jobs:
+  noticias:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/noticias.mjs
+      - name: Commit se mudou
+        run: |
+          # ignora mudança só no horário de "atualizado"
+          if git diff --quiet -I '"atualizado"' -- noticias.json; then
+            echo "Manchetes iguais, nada a fazer."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add noticias.json
+          git commit -m "Atualiza notícias"
+          git push

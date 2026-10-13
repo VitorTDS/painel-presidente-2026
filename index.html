@@ -351,8 +351,7 @@ function interpretar(d) {
   for (const agr of d.carg?.[0]?.agr || [])
     for (const par of agr.par || [])
       for (const c of par.cand || [])
-        // nmBusca = nome original do TSE, sem acento: o rss2json recusa "FLÁVIO BOLSONARO" (HTTP 422)
-        cands.push({ n: c.n, nm: NOME_EXIBIDO[c.n] || c.nmu, nmBusca: c.nmu, par: par.sg, votos: +c.vap || 0, pct: num(c.pvapn ?? c.pvap),
+        cands.push({ n: c.n, nm: NOME_EXIBIDO[c.n] || c.nmu, par: par.sg, votos: +c.vap || 0, pct: num(c.pvapn ?? c.pvap),
                      st: c.st || "", eleito: /^Eleito/.test(c.st || "") });
   cands.sort((a, b) => b.votos - a.votos);
   return {
@@ -631,53 +630,49 @@ function desenharTabelaGrafico() {
     `<table><thead><tr><th>Hora</th><th>${esc(nomeLula)}</th><th>${esc(nomeAdv)}</th></tr></thead><tbody>${linhas}</tbody></table>`;
 }
 
-// ===== notícias dos candidatos (Google Notícias via rss2json) =====
-const NOTICIAS_TTL = 10 * 60 * 1000; // não busca de novo pro mesmo candidato antes de 10 min
-const NOTICIAS_TTL_ERRO = 30 * 1000;  // falha é passageira (rss2json oscila): tenta de novo logo
-const noticiasCache = {};            // número do candidato -> { items, erro, quando }
+// ===== notícias dos candidatos =====
+// As manchetes do Google Notícias são baixadas a cada 15 min pelo GitHub Actions
+// (.github/workflows/noticias.yml) e gravadas em noticias.json neste repositório.
+// Lê pelo raw.githubusercontent.com (atualiza na hora, sem esperar o deploy do Pages) e,
+// se falhar, pela cópia publicada junto com a página.
+const NOTICIAS_URLS = [
+  "https://raw.githubusercontent.com/vitortds/painel-presidente-2026/master/noticias.json",
+  "noticias.json",
+];
+const NOTICIAS_TTL = 5 * 60 * 1000;   // relê o arquivo no máximo a cada 5 min
+const NOTICIAS_TTL_ERRO = 30 * 1000;  // depois de uma falha, tenta de novo logo
+let noticiasArquivo = null;           // { dados, erro, quando }
 let noticiasToken = 0;
 
-const urlGoogleNews = consulta => `https://news.google.com/rss/search?q=${encodeURIComponent(consulta)}&hl=pt-BR&gl=BR&ceid=BR:pt-BR`;
 const urlBuscaGoogleNews = nome => `https://news.google.com/search?q=${encodeURIComponent(nome)}&hl=pt-BR&gl=BR&ceid=BR:pt-BR`;
 
 function formatarDataNoticia(s) {
-  const d = new Date(String(s).replace(" ", "T") + "Z");
+  const d = new Date(s);
   if (isNaN(d)) return "";
   return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) + " " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 }
 
-async function baixarNoticias(consulta) {
-  const url = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(urlGoogleNews(consulta))}`;
-  const r = await fetch(url);
-  if (!r.ok) throw new Error("HTTP " + r.status);
-  const d = await r.json();
-  if (d.status !== "ok") throw new Error("rss2json: " + d.status);
-  if (!(d.items || []).length) throw new Error("sem itens");
-  return d.items;
+async function carregarArquivoNoticias() {
+  const atual = noticiasArquivo;
+  if (atual && Date.now() - atual.quando < (atual.erro ? NOTICIAS_TTL_ERRO : NOTICIAS_TTL)) return atual;
+  const estado = { dados: atual?.dados || null, erro: false, quando: Date.now() };
+  noticiasArquivo = estado;
+  for (const url of NOTICIAS_URLS) {
+    try {
+      const r = await fetch(url, { cache: "no-store" });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      estado.dados = await r.json();
+      return estado;
+    } catch (e) { /* tenta o próximo endereço */ }
+  }
+  estado.erro = !estado.dados;   // se já tinha manchetes de antes, continua mostrando
+  return estado;
 }
 
-async function buscarNoticias(n, nome) {
-  const atual = noticiasCache[n];
-  if (atual && Date.now() - atual.quando < (atual.erro ? NOTICIAS_TTL_ERRO : NOTICIAS_TTL)) return atual;
-  const estado = { items: null, erro: false, quando: Date.now() };
-  noticiasCache[n] = estado;
-  // o rss2json falha de vez em quando (HTTP 500) mesmo com a consulta certa: tenta de novo com variações
-  const consultas = [nome, `"${nome}"`, `${nome} when:7d`];
-  let items = null;
-  for (let i = 0; i < consultas.length && !items; i++) {
-    try {
-      items = await baixarNoticias(consultas[i]);
-    } catch (e) {
-      if (i < consultas.length - 1) await new Promise(ok => setTimeout(ok, 800));
-    }
-  }
-  if (!items) { estado.erro = true; return estado; }
-  estado.items = items.slice(0, 4).map(it => {
-    const partes = String(it.title || "").split(" - ");
-    const fonte = partes.length > 1 ? partes.pop() : "";
-    return { titulo: partes.join(" - "), fonte, link: it.link, quando: it.pubDate };
-  });
-  return estado;
+async function buscarNoticias(n) {
+  const arq = await carregarArquivoNoticias();
+  const items = arq.dados?.candidatos?.[n];
+  return { items: items && items.length ? items : null, erro: !items || !items.length };
 }
 
 function colunaCarregando(nome, classe) {
@@ -704,9 +699,11 @@ async function desenharNoticias(a, b) {
   // cor segue a identidade do candidato (mesma regra do duelo e do gráfico), não a posição a/b
   const classeA = cor(a), classeB = cor(b);
   const meuToken = ++noticiasToken;
-  if (!noticiasCache[a.n]) $("noticiasColA").innerHTML = colunaCarregando(a.nm, classeA);
-  if (!noticiasCache[b.n]) $("noticiasColB").innerHTML = colunaCarregando(b.nm, classeB);
-  const [ea, eb] = await Promise.all([buscarNoticias(a.n, a.nmBusca), buscarNoticias(b.n, b.nmBusca)]);
+  if (!noticiasArquivo?.dados) {
+    $("noticiasColA").innerHTML = colunaCarregando(a.nm, classeA);
+    $("noticiasColB").innerHTML = colunaCarregando(b.nm, classeB);
+  }
+  const [ea, eb] = await Promise.all([buscarNoticias(a.n), buscarNoticias(b.n)]);
   if (meuToken !== noticiasToken) return;   // usuário já trocou de aba/candidatos nesse meio tempo
   $("noticiasColA").innerHTML = colunaNoticiasHtml(a.nm, ea, classeA);
   $("noticiasColB").innerHTML = colunaNoticiasHtml(b.nm, eb, classeB);
