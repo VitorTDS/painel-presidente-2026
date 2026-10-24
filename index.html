@@ -724,18 +724,19 @@ function estadoDaTela(r) {
 // ===== pesquisas do 2º turno (mostradas enquanto o TSE não publica a apuração) =====
 // Atualizar à mão quando sair pesquisa nova. Percentuais como divulgados; "base" diz se são votos totais
 // (com brancos/nulos/indecisos) ou válidos. Para totais, os válidos são calculados aqui: Lula ÷ (Lula + Flávio).
-const PESQUISAS_ATUALIZADO = "21/10/2026";
+const PESQUISAS_ATUALIZADO = "24/10/2026";
 // Ordem: mais recente primeiro. Rodadas divulgadas antes do 1º turno (04/10) ganham a marca "antes do 1º turno".
 const PESQUISAS = [
+  { inst: "CNT/MDA",       data: "24/10", lula: 49.3, flavio: 50.7, base: "validos", margem: 2.2, reg: "BR-02136/2026" },
   { inst: "Quaest",        data: "21/10", lula: 44,   flavio: 45,   base: "totais",  margem: 2,   reg: "BR-08535/2026" },
   { inst: "Meio/Ideia",    data: "21/10", lula: 48.9, flavio: 51.1, base: "validos", margem: 2.5, reg: "BR-08251/2026" },
   { inst: "Futura",        data: "21/10", lula: 48.9, flavio: 51.1, base: "validos", margem: 2.2, reg: "BR-06614/2026" },
   { inst: "Real Time Big Data", data: "20/10", lula: 48,   flavio: 52,   base: "validos", margem: 2,   reg: "BR-02952/2026" },
   { inst: "AtlasIntel",    data: "19/10", lula: 48.9, flavio: 51.1, base: "validos", margem: 1,   reg: "BR-02418/2026" },
+  { inst: "Ipespe",        data: "17/10", lula: 48.8, flavio: 51.2, base: "validos", margem: 2.6, reg: "BR-00223/2026" },
   { inst: "PoderData/Aya", data: "16/10", lula: 50,   flavio: 50,   base: "validos", margem: 1.8, reg: "BR-04258/2026" },
   { inst: "Datafolha",     data: "15/10", lula: 49,   flavio: 51,   base: "validos", margem: 2,   reg: "BR-00466/2026" },
   { inst: "BTG/Nexus",     data: "13/10", lula: 48,   flavio: 52,   base: "validos", margem: 2,   reg: "BR-07997/2026" },
-  { inst: "Ipespe",        data: "10/10", lula: 47.3, flavio: 52.7, base: "validos", margem: 2.6, reg: "BR-00933/2026" },
 ];
 const antesDo1oTurno = data => { const [d, m] = data.split("/").map(Number); return m * 100 + d < 1004; };
 
