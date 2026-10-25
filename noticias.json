@@ -1,56 +1,56 @@
 {
-  "atualizado": "2026-10-25T01:37:17.863Z",
+  "atualizado": "2026-10-25T06:48:48.123Z",
   "candidatos": {
     "13": [
       {
-        "titulo": "Quaest: Flávio Bolsonaro tem 51% dos votos válidos, e Lula, 49%",
-        "fonte": "UOL Notícias",
-        "link": "https://news.google.com/rss/articles/CBMiogFBVV95cUxNZUt0akZuREVHd19uNktqbHhWRHFZX1RTWnNVWUVRM3R0aFF3VERYN0Z1b3BhVHZYN3g5MzFSSmZMZ1c4TXp0c1pLdjFSYk56T3IyVWlvZ1EyM29yV0t1NjYzeURlUVVhTFJydkxjVV9RTlA0TXRaZklLQkxBY2VUNUwteHlqUlpyaTlxd2hrejg1R2ZkZ2lucGxzTVBBSWEyZUE?oc=5",
-        "quando": "2026-10-25T01:14:34.000Z"
+        "titulo": "Com Flávio ou Lula, o Brasil precisa mudar",
+        "fonte": "Estadão",
+        "link": "https://news.google.com/rss/articles/CBMigwFBVV95cUxOTGoxQlc3LVJyMUhLZHV5RzBYNHhUR2FFU2FvN0ZOYk5qQ3IzZ19uMkU0Yl9RYVhzeG9IbFB4bkRJZTRPNWtKRWxsbW1VN2Vxam5obGxjTS1PeFhYN0RPRUFFMFpvS3FESzBNQXBSUW5DUjh2RUU1NHEtdF9KQzN5aXdESQ?oc=5",
+        "quando": "2026-10-25T06:02:00.000Z"
       },
       {
-        "titulo": "Ato de Lula ocupa 14 quarteirões da avenida Paulista",
+        "titulo": "Lula vence Flávio na Nova Zelândia; acompanhe votação no exterior",
         "fonte": "Poder360",
-        "link": "https://news.google.com/rss/articles/CBMiowFBVV95cUxPUW0wTFozcVQ1S1U5V0dQTC1pcXR5QlpIenlWdndGZjVRT2I2aE9Pa0wyazZrbVZUVEY0dWVvSmJlekVRSDZTYzBvckgwdGFlQWtPeVY3ODVKbURrdmM2VWZTS1ZISko3UFJsMFpwQ1NmUG9mNlpIMkhnUVhVa1hfbHdia0ZOMmxsLXYySnQzbEJDbk1WeU9lM2NvUDlvLV9rYmgw?oc=5",
-        "quando": "2026-10-25T01:13:43.000Z"
+        "link": "https://news.google.com/rss/articles/CBMilAFBVV95cUxPRWlpM1VNS3dVYVV6SDBNcklHb3NaempTWEltYW9vbHA1MmZ6SWo5MG9DV2pmUDd4VUlBSDMwZ01KeHhpTjBWbGxkTW1QUktRWklVZWNLQXJpRmxhazFES1E1UF91eWhHVjFvQW1oMDJ3M3VrSFhxYlEtQVBRMzJ5QjQ0NDBISHV5aHgxMGNCNXZpa1dK?oc=5",
+        "quando": "2026-10-25T05:44:10.000Z"
       },
       {
-        "titulo": "Veritá: Flávio tem 51,56% dos votos válidos no 2º turno; Lula, 48,44%",
-        "fonte": "CNN Brasil",
-        "link": "https://news.google.com/rss/articles/CBMiowFBVV95cUxOWTFnUHpnRkxCQm12U1FsYkVKVzcyN2NHV1VPVkM5bzZ3djVtazRRRlhXY2ZYaUU5RGRSWWtZenFBVmJ3MjN0R3dwNnNlaXFrcUhTUjhLYWJQNUhJc2lsSmc0Q1YwMVV5Ni01UEpLb1J2Ti1JZmZSYW82SVB2cFhKb3JJOERTSXFFQzdkY1RtZDJLQnhyN3JQX1Y0UE9GaVRJeV9r?oc=5",
-        "quando": "2026-10-25T01:11:31.000Z"
+        "titulo": "Lula reúne multidão em Copacabana e faz apelo ao voto na véspera do segundo turno",
+        "fonte": "Mídia NINJA",
+        "link": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxQYWlTeUhYemFqS0FFbVRPV3ZmaWJSenhRUkRBY2xQSlpXX1h2WkJkazVycTRxajhDbGlES29GZ3dBcm44cW9NWDk0cWJWRmUtcnJPMlI4c3hHWHd5OG1IUXZPZGFzbmlYclkzQWlyZnNWTXZzTkh4azZ4Rm1hQUpnTG90Q051cDJwZGUzblI3OWEzUmlCTm9TN1JzalNuY2Jia2x6dXlZelU?oc=5",
+        "quando": "2026-10-25T05:19:51.000Z"
       },
       {
-        "titulo": "Saiba como foi o último dia das campanhas de Lula e Flávio Bolsonaro",
-        "fonte": "Gazeta do Povo",
-        "link": "https://news.google.com/rss/articles/CBMiswFBVV95cUxOLWpZclBWeEVFekxjZDVCbHc5VENpT0NJWVNEWGl0YVlIVUdmOEhJWGZSYW9tTFdfS1BlZDJTM3dXbzVvRURsWFJJTDdVdjBzcmxoeDRmcUM5WERoVnY5Q3hhRUNwbUdaTnp3WFl4NTZCXzExZElrcXVBZERxUzFpQ3dlT2lvSl8ycnBjWjRRSkY2YUYyaDVGTzRrcC1VNzNHT2gtdGtsa1lxQklhbXBPN21BUQ?oc=5",
-        "quando": "2026-10-25T01:08:00.000Z"
+        "titulo": "Veja fotos do ato de Lula na Paulista antes do 2º turno",
+        "fonte": "Poder360",
+        "link": "https://news.google.com/rss/articles/CBMipwFBVV95cUxPdDlySnVscHFveVoyX0xmcjBQZlpwNmhyZlhRb3lWUXpJSHFlZkRId1R1UFQ5dnJIOWVsS0J5NGVzR09yb3NoMm9xRXFkNDZjdUZaOHlPWDRKMXNHOVA5elFYWmFRdFg3MjU4UW9DblM2S2EzanY3NjBnMHpyNEdPa0hITHpYUTF1WkVkLXJjRHpVUXN0alBlbTctZ1p2NVhZdGc5NHBfOA?oc=5",
+        "quando": "2026-10-25T04:02:32.000Z"
       }
     ],
     "22": [
       {
-        "titulo": "Flávio Bolsonaro diz que Brasil está “cansado de esperar” por mudanças com Lula",
-        "fonte": "Gazeta do Povo",
-        "link": "https://news.google.com/rss/articles/CBMiuwFBVV95cUxObldxQVY5b3lUN1ZYTk8yaDZ3Y3BEZDFwNmtBUFAwWnZzY0F6bzd1VFAza19Lcm9tODZtaXFkSE0yV2VUUC1wV2h5SWppQTN1TXVKdnNjalI1UDlmMGtyNE5tTVN1akhfNnRPZnl5WV9PSGk1YVBETWVGTE9kTEhrSEp6TG5wekZ0Vk9CQVFINUU4cG5uUVN3MGc0TVdjS0syZ2xMSVlGUEVpeUlpR2VXMnpqcGE0Z2QxVjVj?oc=5",
-        "quando": "2026-10-25T01:10:00.000Z"
-      },
-      {
-        "titulo": "Saiba como foi o último dia das campanhas de Lula e Flávio Bolsonaro",
-        "fonte": "Gazeta do Povo",
-        "link": "https://news.google.com/rss/articles/CBMiswFBVV95cUxOLWpZclBWeEVFekxjZDVCbHc5VENpT0NJWVNEWGl0YVlIVUdmOEhJWGZSYW9tTFdfS1BlZDJTM3dXbzVvRURsWFJJTDdVdjBzcmxoeDRmcUM5WERoVnY5Q3hhRUNwbUdaTnp3WFl4NTZCXzExZElrcXVBZERxUzFpQ3dlT2lvSl8ycnBjWjRRSkY2YUYyaDVGTzRrcC1VNzNHT2gtdGtsa1lxQklhbXBPN21BUQ?oc=5",
-        "quando": "2026-10-25T01:08:00.000Z"
-      },
-      {
-        "titulo": "Lula e Flávio Bolsonaro direcionam vídeos para Carlinhos Maia após influenciador citar dúvida sobre voto",
+        "titulo": "Um herdeiro de clã em constante provação: Flávio Bolsonaro supera desconfiança sob o desafio de aplacar divisões",
         "fonte": "O GLOBO",
-        "link": "https://news.google.com/rss/articles/CBMiiwJBVV95cUxQS3VBVU5taXZQNHhQblpwcElDdjdBWnhlb05LLVdISUhEX1ZMY3ZTRDd2aU1tQTE4TDlNY25sbWs4YUVhWjAyNlJfU3NGUVBWeXZvNUwzN0lFY2xaQk5kTC1CWlRWLVBRR0MzOXRDRExiVnV6dFl4UVVyYmRITGU3YnQyT2llVFlnRHFKZTZhcHRYMUU2WFJYYVk5WFFOaWJrdWpnUzJPVVNTV1o0ZTVIRkR0UW5ybmY3SV9HY1RjWnZ5YnkwbFcwMmI4dGY2T2N2MFZOLXl2dzhyaGdSaGNoQmMwQi1yUTlwWmh3amRlNFNuNWlEaTRVbk8zdV9zVDZfRW1FRnpxYWd5NjjSAZoCQVVfeXFMUDcxNVR0bHFCV1RJdUtxU0w2UFBiRGtfX0FlWURleEZlcmI1SzdhT3d6elNSeldLdXVIT3ZNZmYySHFIY09HRFRCMkpHX3hZSF9SeDlBODFjZF9KcmhlbUxKTWhXaWpYaUp5S29yNVVpeWZWRklSWnEwZHdZU3UtWFVieElnUmw5MlptTkNQS0RFREpjX3hGWkljQTFsemxwT0hfVlpiTm5MeHUydEFxSmM3QmlTSlB2TWhKOTEtSDUyOEd2MU11T0N2VFNseklrQ25zZHhZdjJXUTV4MkxRRjZxUG1VazhlU1RYNU9xZGJCSWl6Q2FQeDJGTGNhQXlmZFFhNzJvOVpTcWR1MndMallEWXk5RVVrN1pB?oc=5",
-        "quando": "2026-10-25T00:55:13.000Z"
+        "link": "https://news.google.com/rss/articles/CBMihAJBVV95cUxQV0JvU24tRkstTVFIbjBXZ1ZzQk9QTHRFZERZNmxOS0E4REFhU3NEM2lhNkVvdHZCYm1aSko1OC1MVVNKcUVYWVhKbWgyQjUwWWNrekhLelplS1huOXNsWmxKeEFTU2pKSG1XVkhzbk8zQ0JEVldWTDVHNFhUaWJZX0x6S1Vncllha1hYYUtYRUE5OUloUzlZZ0tkYnlwTzdtVlVyZERrN0hDLUVoVlFYNmNJSG1wZWNiSzc1QjFwbHBHMHFET0dJVTdwY2dpalRzWlBKbU9HRTRuQWZHS1BzZkMxbmxMSmdZUU5famlFdkk5WU5oWnJQRms3NGhGZGNfRDRhQdIBkwJBVV95cUxQLU0tS1JLS0hQMjd3WXNGUkZ3VE1HNkhfd1gzUUNhZDhqa2dralBuZ2lXR0taQzA0eTktRl9WWmp5Xy1rbFZHY28xWFEyTVhkS1d0ckgwV3ZwbnQ2YjN0Tzh1M2xiTzBjWnh2Ul9BYVptV21oVDkwc0dxcHhoT2NzdEhuSFBOQURXWGV4TnpVcXNhUHJ5ZnBybmpCamN5V29Ha20yUGtTNUd3aXF0ZUxfNEdOcUlsTXd4WFVuQ0RTQzdGUzVDbk1FS3VzeUNkX1IyM2NFeGJ6T1ZlRWlneVkwRGY4N1VKQlBuX0xyajFoUGc3NW1NQnc4SExHSWFHODZoVEtFeXF0UEwybS11M2pEa0swdw?oc=5",
+        "quando": "2026-10-25T06:30:01.000Z"
       },
       {
-        "titulo": "Pesquisa Datafolha: Flávio Bolsonaro tem 51% e Lula, 49%, dos votos válidos",
+        "titulo": "Por que Flávio Bolsonaro? Segurança, economia e rejeição ao PT dão o tom entre eleitores do senador",
+        "fonte": "O GLOBO",
+        "link": "https://news.google.com/rss/articles/CBMi8gFBVV95cUxQUHp3eGlVYjJqZ2J6T1JXZl91SGNab01IWng5Q3BIbW1sUTRqNXRjY2xQQkhaaVZkREpTWDdPMGRJaGFlZzhpbXBsdFNnUmRHR2ZhR1BfalpNaWVVVzZ0MnVSZlZVemx6VkVacnNjeTV5MGs2UncyXzJnaVUzXzROYnRVMHFDLWVzd0VxYWt0Y3QtMk5PVmpXZ3FWdjVnOHY0UkNlLVJ5NGUzcERleG5vNWpVUDAtY2NWVFM5NU1nNk1sTDU0TjJPRnRKb09Kb09VdXBlNHN1Wi1SZzluZnZQM1M4WjRhR2VvWldITkFPWnpfd9IBgAJBVV95cUxNOHRzSG4yaE9yMkZjaFNLejVvN2VJM3psejQ3dTJmUG1DbDQyNjJRT2xKMmJ1bGg2eGQydTFFT1J6T280dHhQODlGXzVFOVZNZi1TRUNvQXVqZThNdG1yMXFFWFBfLUFTbkhvRmt0R2JsZVhXdWxtLWJlYVdPUVN1NHFpN3R5TDkzMEFIdkp5bWF3bHBNSTVVenhhcnY2WkZrdUFTSWFMUUJHVUFTaHpQOC0tX2UxU0xJaXdyOGVUMjBFdm9ZeklUUkhOaExKLWFwVmFCVXhhWkI4cXlON3d3ckVNR0pNT2VCS1VFTE5WOWVid1hXdFotLTAydG1HTDFj?oc=5",
+        "quando": "2026-10-25T06:30:00.000Z"
+      },
+      {
+        "titulo": "Com 51% a 49% no Datafolha e na Quaest, Flávio Bolsonaro e Lula chegam à eleição com a menor diferença em 20 anos",
+        "fonte": "O GLOBO",
+        "link": "https://news.google.com/rss/articles/CBMijAJBVV95cUxOZ3J2TG9KUnZIUm11Q3dfYlEzM216NUMzZVV5c2cyekNkZ0ZYNEd5VkV3RC1aZVYzdUN2QkNMNE1lMUtaVTYwUW1wQnJUenQ1UGhNY2ZjNGQ4MEVCSmtCa01PRkl3VnloOG5ZRkhVRWlpcmZTUjlJaUlodzRxanpWRDg2SEU1YmxlcjdqV1V1aV94SG9CbWR5UmF6Y0FDRUo5WHhuRWhXN1hpcE1COVJvck16clpJdy14XzZoVDFlWnZISEdRVWVPRWJZNWhieU9tbi12VjJJQzhTVTk4TmlFbkRoemo1VmJqT0g4aWhrbWVQY0NreHhyUjZEc0JYSXFOVzJIY1FVeWNVd21l0gGbAkFVX3lxTE10UWN6T0d0OGJYSkhXSWNwM0FTMWtGQ0VvTWNPUEotMHI2ZFdMS1pNLXVyRWlyTFVuSUxaY01ub1JGQ19HR2NBbG1mNnVhZjlQN3hmNHVVM0RuWnhwSHhvdE5HMEdKck1IMWZpV0xTYUMtM2lNZE9taW1GdFZHd01fTzFIam1LWjU4eUdWNkx0eVZNeDY5cDNKclRzWTI5TXNIYVJNR0Nwc2wwWGRTb1FHQWJveVBLRDRNWnFpTUtCU21UbFFMSTNXcTMyX1pfUkx3OGdZcVhoWGJlZmYzWm8yZ21VZnZnMndSYUtUdXhUWGpGOGxlblVpZjB3ckx0YUU1RlE1clctdElyYWQ2Rm0zTnNrZEZzVUVRVXc?oc=5",
+        "quando": "2026-10-25T06:30:00.000Z"
+      },
+      {
+        "titulo": "Lula x Flávio Bolsonaro: o que cada um propõe para o STF e o Judiciário",
         "fonte": "Exame",
-        "link": "https://news.google.com/rss/articles/CBMinAFBVV95cUxONDRJNVk4OTNhbTZzQ2lUOTV1X3ZHZ2ZNb1N0VWV1Z0dRaWpUVmVINm5NdUZ3Szg3NnpXZmk3N2hfZ0M4aFd0VnhWSlAzTi1lQVdQYWFieF9reTFXSWZKeXpiWGp6ZjBYV0VMbGxKMGdWLUhqZkVhcTJ1LXNudnFaQjR0d0RjVURXTzVMOENKdV9JblRsdXVOaDRaUnM?oc=5",
-        "quando": "2026-10-25T00:36:58.000Z"
+        "link": "https://news.google.com/rss/articles/CBMinAFBVV95cUxPMnNFdkdseWtRVnowWERxY2UwX1BsSjE3VWtRbFZXY1dPUEd3Rk8zQTFJR0pqYTBWV0lUTEltaFRJSUg2QlVnandobkZxc3R1ZGlmZEk3NElHeVJWTXFtY2loS1pITUI1aWM0MDZ2RzM5S2h4ZHlyTlFTZzlEbUUtZGlhWW5EeWNHb3QwY1MyUl9WR1JNWHhIa2o3RWE?oc=5",
+        "quando": "2026-10-25T06:04:27.000Z"
       }
     ]
   }
